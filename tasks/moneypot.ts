@@ -1,7 +1,7 @@
 import "@nomicfoundation/hardhat-toolbox-viem"
 import { task } from "hardhat/config"
-import { getAccount } from "../utils/accounts"
-import { connectMoneyPot } from "../utils/web3"
+import { getAccount } from "../utils/accounts.js"
+import { connectMoneyPot } from "../utils/web3.js"
 
 // Helper function to connect to MoneyPot contract
 async function connectMoneyPotContract(hre: any) {
@@ -17,11 +17,11 @@ async function connectMoneyPotContract(hre: any) {
 }
 
 task("moneypot:balance", "Get MoneyPot contract balance for an account")
-  .addOptionalParam(
-    "account",
-    "Account to check balance for (defaults to admin)",
-    "admin"
-  )
+  .addOption({
+    name: "account",
+    description: "Account to check balance for (defaults to admin)",
+    defaultValue: "admin"
+  })
   .setAction(async ({ account }, hre) => {
     try {
       const moneyPot = await connectMoneyPotContract(hre)
@@ -92,12 +92,12 @@ task("moneypot:stats", "Get MoneyPot contract statistics").setAction(
 )
 
 task("moneypot:deposit", "Deposit ETH into MoneyPot")
-  .addPositionalParam("amount", "Amount of ETH to deposit")
-  .addOptionalParam(
-    "account",
-    "Account to use for deposit (defaults to admin)",
-    "admin"
-  )
+  .addPositionalArgument("amount", "Amount of ETH to deposit")
+  .addOption({
+    name: "account",
+    description: "Account to use for deposit (defaults to admin)",
+    defaultValue: "admin"
+  })
   .setAction(
     async ({ amount, account }: { amount: string; account?: string }, hre) => {
       try {
@@ -135,12 +135,12 @@ task("moneypot:deposit", "Deposit ETH into MoneyPot")
   )
 
 task("moneypot:withdraw", "Withdraw ETH from MoneyPot")
-  .addPositionalParam("amount", "Amount of ETH to withdraw")
-  .addOptionalParam(
-    "account",
-    "Account to use for withdrawal (defaults to admin)",
-    "admin"
-  )
+  .addPositionalArgument("amount", "Amount of ETH to withdraw")
+  .addOption({
+    name: "account",
+    description: "Account to use for withdrawal (defaults to admin)",
+    defaultValue: "admin"
+  })
   .setAction(
     async ({ amount, account }: { amount: string; account?: string }, hre) => {
       try {
@@ -180,11 +180,11 @@ task("moneypot:withdraw", "Withdraw ETH from MoneyPot")
   )
 
 task("moneypot:withdrawAll", "Withdraw all ETH from MoneyPot")
-  .addOptionalParam(
-    "account",
-    "Account to use for withdrawal (defaults to admin)",
-    "admin"
-  )
+  .addOption({
+    name: "account",
+    description: "Account to use for withdrawal (defaults to admin)",
+    defaultValue: "admin"
+  })
   .setAction(async ({ account }: { account?: string }, hre) => {
     try {
       const moneyPot = await connectMoneyPotContract(hre)

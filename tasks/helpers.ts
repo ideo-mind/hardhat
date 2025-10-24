@@ -1,7 +1,7 @@
 import { ethers } from "ethers"
 import { HardhatRuntimeEnvironment } from "hardhat/types"
-import { Account } from "../utils/types"
-import { getSigner } from "../utils/web3"
+import { Account } from "../utils/types.js"
+import { getSigner } from "../utils/web3.js"
 
 /**
  * Transfer ETH to an account

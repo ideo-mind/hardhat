@@ -7,26 +7,26 @@ import {
   getBalance,
   getBalanceInEther,
   getPublicAddress,
-} from "../utils/accounts"
-import { Account } from "../utils/types"
-import { getSigner } from "../utils/web3"
-import { FundOut, Out } from "./account.d"
+} from "../utils/accounts.js"
+import { Account } from "../utils/types.js"
+import { getSigner } from "../utils/web3.js"
+import { FundOut, Out } from "./account.d.js"
 import {
   balanceOfMoneyPot,
   tokenBal,
   transferEther,
   transferToken,
-} from "./helpers"
+} from "./helpers.js"
 
 // ----- Tasks -----
 task("balance", "Prints an account's balance")
-  .addPositionalParam("account", "The account's address or private key")
+  .addPositionalArgument("account", "The account's address or private key")
   .setAction(async (args, hre) => {
     await hre.run("bal", args)
   })
 
 task("bal", "Prints an account's balance")
-  .addPositionalParam("account", "The account address or pkey")
+  .addPositionalArgument("account", "The account address or pkey")
   .setAction(async ({ account }, hre) => {
     console.log("network", hre.network.name)
     const address = getAddressFromInput(account)
@@ -43,29 +43,33 @@ task("bal", "Prints an account's balance")
     console.table(out)
   })
 
-task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
-  const accounts = await hre.ethers.getSigners()
-  console.log("Loading accounts")
-  for (const account of accounts) {
-    const bal = await getBalance(account.address, hre)
-    const balString = hre.ethers.formatEther(bal) + " ETH"
-    console.log("acc", account.address, balString)
+task("accounts", "Prints the list of accounts").setAction(
+  async (taskArgs, hre) => {
+    const accounts = await hre.ethers.getSigners()
+    console.log("Loading accounts")
+    for (const account of accounts) {
+      const bal = await getBalance(account.address, hre)
+      const balString = hre.ethers.formatEther(bal) + " ETH"
+      console.log("acc", account.address, balString)
+    }
   }
-})
+)
 
 task("account", "Prints account address from private key")
-  .addPositionalParam("privateKey", "The private key")
+  .addPositionalArgument("privateKey", "The private key")
   .setAction(async ({ privateKey }, hre) => {
     const address = getPublicAddress(privateKey, hre)
     console.log("account:", address)
   })
 
+// Temporarily comment out complex tasks to isolate the issue
+/*
 task("drip", "Drip any address")
-  .addPositionalParam("account", "The address or privateKey to drip to")
-  .addOptionalPositionalParam("eth", "The amount to drip", "0.01")
-  .addOptionalPositionalParam("amt", "The token amount to drip", "0")
-  .addOptionalPositionalParam("nonce", "The starting nonce default value")
-  .addOptionalParam("tokenAddress", "The Token address defaults to MoneyPot")
+  .addPositionalArgument("account", "The address or privateKey to drip to")
+  .addOption("eth", "The amount to drip", "0.01")
+  .addOption("amt", "The token amount to drip", "0")
+  .addOption("nonce", "The starting nonce default value")
+  .addOption("tokenAddress", "The Token address defaults to MoneyPot")
   .setAction(
     async ({ account, eth, amt, nonce: startNonce, tokenAddress }, hre) => {
       console.log("network", hre.network.name)
@@ -156,8 +160,8 @@ task("drip", "Drip any address")
   )
 
 task("new-wallet", "New Wallet, optional drip")
-  .addOptionalPositionalParam("eth", "The amount to drip", "0.01")
-  .addOptionalPositionalParam("amt", "The amount to drip", "10000")
+  .addOption("eth", "The amount to drip", "0.01")
+  .addOption("amt", "The amount to drip", "10000")
   .setAction(async ({ eth, amt }, hre) => {
     console.log("network", hre.network.name)
     const wallet = Wallet1.generate()
@@ -165,3 +169,4 @@ task("new-wallet", "New Wallet, optional drip")
     console.log(`export PRIVATE_KEY=${privateKey}`)
     await hre.run("drip", { account: privateKey, eth, amt })
   })
+*/
