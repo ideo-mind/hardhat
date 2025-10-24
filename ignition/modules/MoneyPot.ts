@@ -66,6 +66,7 @@ const MoneyPotModule = buildModule("MoneyPotModule", (m) => {
       tokenSymbol = "MPT"
     }
   } else {
+    console.log("No token address provided, deploying new token...")
     // Deploy new token contract
     const tokenNameParam = m.getParameter("tokenName", "Deployed Token")
     const tokenSymbolParam = m.getParameter("tokenSymbol", "DTOKEN")

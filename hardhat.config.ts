@@ -54,6 +54,10 @@ const config: _Config = {
   plugins: [hardhatToolboxMochaEthersPlugin, keystorePlugin],
   solidity: {
     version: "0.8.28",
+    npmFilesToBuild: [
+      "@openzeppelin/contracts/token/ERC20/ERC20.sol",
+      "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+    ],
     settings: {
       optimizer: {
         enabled: true,
