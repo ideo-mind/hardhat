@@ -28,7 +28,7 @@ contract MoneyPotToken is
     UUPSUpgradeable
 {
     using SafeERC20 for IERC20Metadata;
-    
+
     // The underlying ERC20 token being proxied
     IERC20Metadata public immutable underlying;
 
