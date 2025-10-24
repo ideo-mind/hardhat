@@ -7,9 +7,11 @@ set export
 
 import? "local.justfile"
 
+NETWORK := env("NETWORK")
+
 start *ARGS: 
   bun start {{ARGS}}
 
 
-deploy-localhost:
-  bun hardhat ignition deploy ignition/modules/MoneyPot.ts --network localhost --parameters ignition/parameters/localhost.json
+deploy network=NETWORK:
+  bun hardhat ignition deploy ignition/modules/MoneyPot.ts --network {{network}} --parameters ignition/parameters/{{network}}.json
