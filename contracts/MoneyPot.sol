@@ -1,250 +1,271 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.28;
+pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/Pausable.sol";
+import "./MoneyPotToken.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 /**
  * @title MoneyPot
- * @dev A contract for pooling funds with deposit and withdrawal functionality
+ * @dev MoneyPot contract that inherits from MoneyPotToken and implements game mechanics
+ * @notice This contract combines token proxy functionality with MoneyPot game mechanics
+ *
+ * Architecture:
+ * - Inherits from MoneyPotToken for ERC20 proxy functionality
+ * - Implements MoneyPot game logic with proxied token
+ * - Maintains separation of concerns: token proxy logic in parent, game logic here
  */
-contract MoneyPot is Ownable, ReentrancyGuard, Pausable {
+contract MoneyPot is MoneyPotToken {
+    // Constants
+    uint256 public constant DIFFICULTY_MOD = 3;
+    uint256 public constant HUNTER_SHARE_PERCENT = 40;
+    uint256 public constant CREATOR_ENTRY_FEE_SHARE_PERCENT = 50;
+
     // State variables
-    mapping(address => uint256) public balances;
-    mapping(address => bool) public hasDeposited;
+    address public trustedOracle;
 
-    uint256 public totalDeposits;
-    uint256 public totalParticipants;
-    uint256 public minimumDeposit;
-    uint256 public maximumDeposit;
+    // Structs
+    struct MoneyPotData {
+        uint256 id;
+        address creator;
+        uint256 totalAmount;
+        uint256 fee;
+        uint256 createdAt;
+        uint256 expiresAt;
+        bool isActive;
+        uint256 attemptsCount;
+        address oneFaAddress;
+    }
 
-    // Fee configuration
-    uint256 public feePercentage; // in basis points (100 = 1%)
-    address public feeRecipient;
-    uint256 public totalFeesCollected;
+    struct Attempt {
+        uint256 id;
+        uint256 potId;
+        address hunter;
+        uint256 expiresAt;
+        uint256 difficulty;
+        bool isCompleted;
+    }
+
+    // State
+    uint256 public nextPotId;
+    uint256 public nextAttemptId;
+    mapping(uint256 => MoneyPotData) public pots;
+    mapping(uint256 => Attempt) public attempts;
+    uint256[] private potIds;
 
     // Events
-    event Deposited(address indexed user, uint256 amount, uint256 timestamp);
-    event Withdrawn(address indexed user, uint256 amount, uint256 timestamp);
-    event FeeCollected(uint256 amount, uint256 timestamp);
-    event MinimumDepositUpdated(uint256 newMinimum);
-    event MaximumDepositUpdated(uint256 newMaximum);
-    event FeePercentageUpdated(uint256 newFeePercentage);
-    event FeeRecipientUpdated(address newRecipient);
-    event EmergencyWithdraw(address indexed user, uint256 amount);
+    event PotCreated(
+        uint256 indexed id,
+        address indexed creator,
+        uint256 timestamp
+    );
+    event PotAttempted(
+        uint256 indexed attemptId,
+        uint256 indexed potId,
+        address indexed hunter,
+        uint256 timestamp
+    );
+    event PotSolved(
+        uint256 indexed potId,
+        address indexed hunter,
+        uint256 timestamp
+    );
+    event PotFailed(
+        uint256 indexed attemptId,
+        address indexed hunter,
+        uint256 timestamp
+    );
+    event PotExpired(
+        uint256 indexed potId,
+        address indexed creator,
+        uint256 timestamp
+    );
 
-    constructor(
-        uint256 _minimumDeposit,
-        uint256 _maximumDeposit,
-        uint256 _feePercentage,
-        address _feeRecipient
-    ) Ownable(msg.sender) {
-        require(_minimumDeposit > 0, "Minimum deposit must be greater than 0");
+    // Errors
+    error InvalidFee();
+    error PotNotActive();
+    error ExpiredPot();
+    error NotExpired();
+    error AttemptExpired();
+    error AttemptCompleted();
+    error Unauthorized();
+
+    constructor() {}
+
+    /**
+     * @dev Initialize the MoneyPot contract
+     * @param _token Address of the ERC20 token to use
+     * @param _trustedOracle Address of the trusted oracle
+     */
+    function initialize(
+        IERC20Metadata _token,
+        address _trustedOracle
+    ) external onlyOwner {
+        // Initialize the underlying token
+        initializeToken(_token);
+
+        // Set MoneyPot specific parameters
+        trustedOracle = _trustedOracle;
+    }
+
+    function createPot(
+        uint256 amount,
+        uint256 durationSeconds,
+        uint256 fee,
+        address oneFaAddress
+    ) external nonReentrant returns (uint256) {
+        if (fee > amount) revert InvalidFee();
+
+        uint256 id = nextPotId++;
+
+        pots[id] = MoneyPotData({
+            id: id,
+            creator: msg.sender,
+            totalAmount: amount,
+            fee: fee,
+            createdAt: block.timestamp,
+            expiresAt: block.timestamp + durationSeconds,
+            isActive: true,
+            attemptsCount: 0,
+            oneFaAddress: oneFaAddress
+        });
+
+        potIds.push(id);
         require(
-            _maximumDeposit >= _minimumDeposit,
-            "Maximum must be >= minimum"
+            this.transferFrom(msg.sender, address(this), amount),
+            "Transfer failed"
         );
-        require(_feePercentage <= 1000, "Fee cannot exceed 10%");
-        require(_feeRecipient != address(0), "Invalid fee recipient");
 
-        minimumDeposit = _minimumDeposit;
-        maximumDeposit = _maximumDeposit;
-        feePercentage = _feePercentage;
-        feeRecipient = _feeRecipient;
+        emit PotCreated(id, msg.sender, block.timestamp);
+        return id;
     }
 
-    /**
-     * @dev Deposit funds into the pot
-     */
-    function deposit() external payable nonReentrant whenNotPaused {
-        require(msg.value >= minimumDeposit, "Deposit below minimum");
-        require(msg.value <= maximumDeposit, "Deposit exceeds maximum");
+    function attemptPot(uint256 potId) external nonReentrant returns (uint256) {
+        MoneyPotData storage pot = pots[potId];
 
-        uint256 fee = (msg.value * feePercentage) / 10000;
-        uint256 netDeposit = msg.value - fee;
+        if (!pot.isActive) revert PotNotActive();
+        if (block.timestamp >= pot.expiresAt) revert ExpiredPot();
 
-        // Update user balance
-        if (!hasDeposited[msg.sender]) {
-            hasDeposited[msg.sender] = true;
-            totalParticipants++;
-        }
+        uint256 entryFee = pot.fee;
+        uint256 creatorShare = (entryFee * CREATOR_ENTRY_FEE_SHARE_PERCENT) /
+            100;
+        uint256 platformShare = entryFee - creatorShare;
 
-        balances[msg.sender] += netDeposit;
-        totalDeposits += netDeposit;
-
-        // Handle fee
-        if (fee > 0) {
-            totalFeesCollected += fee;
-            payable(feeRecipient).transfer(fee);
-            emit FeeCollected(fee, block.timestamp);
-        }
-
-        emit Deposited(msg.sender, netDeposit, block.timestamp);
-    }
-
-    /**
-     * @dev Withdraw funds from the pot
-     * @param amount Amount to withdraw
-     */
-    function withdraw(uint256 amount) external nonReentrant whenNotPaused {
-        require(amount > 0, "Amount must be greater than 0");
-        require(balances[msg.sender] >= amount, "Insufficient balance");
-
-        balances[msg.sender] -= amount;
-        totalDeposits -= amount;
-
-        // Check if user has withdrawn all funds
-        if (balances[msg.sender] == 0) {
-            hasDeposited[msg.sender] = false;
-            totalParticipants--;
-        }
-
-        payable(msg.sender).transfer(amount);
-
-        emit Withdrawn(msg.sender, amount, block.timestamp);
-    }
-
-    /**
-     * @dev Withdraw all funds
-     */
-    function withdrawAll() external nonReentrant whenNotPaused {
-        uint256 balance = balances[msg.sender];
-        require(balance > 0, "No balance to withdraw");
-
-        balances[msg.sender] = 0;
-        totalDeposits -= balance;
-        hasDeposited[msg.sender] = false;
-        totalParticipants--;
-
-        payable(msg.sender).transfer(balance);
-
-        emit Withdrawn(msg.sender, balance, block.timestamp);
-    }
-
-    /**
-     * @dev Emergency withdraw (no checks, used in case of emergency)
-     */
-    function emergencyWithdraw() external nonReentrant {
-        uint256 balance = balances[msg.sender];
-        require(balance > 0, "No balance to withdraw");
-
-        balances[msg.sender] = 0;
-        totalDeposits -= balance;
-
-        if (hasDeposited[msg.sender]) {
-            hasDeposited[msg.sender] = false;
-            totalParticipants--;
-        }
-
-        payable(msg.sender).transfer(balance);
-
-        emit EmergencyWithdraw(msg.sender, balance);
-    }
-
-    /**
-     * @dev Get user balance
-     * @param user Address of the user
-     */
-    function getBalance(address user) external view returns (uint256) {
-        return balances[user];
-    }
-
-    /**
-     * @dev Get pot statistics
-     */
-    function getPotStats()
-        external
-        view
-        returns (
-            uint256 _totalDeposits,
-            uint256 _totalParticipants,
-            uint256 _totalFeesCollected,
-            uint256 _contractBalance
-        )
-    {
-        return (
-            totalDeposits,
-            totalParticipants,
-            totalFeesCollected,
-            address(this).balance
-        );
-    }
-
-    // Admin functions
-
-    /**
-     * @dev Update minimum deposit amount
-     * @param _minimumDeposit New minimum deposit
-     */
-    function setMinimumDeposit(uint256 _minimumDeposit) external onlyOwner {
-        require(_minimumDeposit > 0, "Minimum must be greater than 0");
         require(
-            _minimumDeposit <= maximumDeposit,
-            "Minimum cannot exceed maximum"
+            this.transferFrom(msg.sender, pot.creator, creatorShare),
+            "Transfer failed"
         );
-        minimumDeposit = _minimumDeposit;
-        emit MinimumDepositUpdated(_minimumDeposit);
-    }
-
-    /**
-     * @dev Update maximum deposit amount
-     * @param _maximumDeposit New maximum deposit
-     */
-    function setMaximumDeposit(uint256 _maximumDeposit) external onlyOwner {
         require(
-            _maximumDeposit >= minimumDeposit,
-            "Maximum must be >= minimum"
+            this.transferFrom(msg.sender, address(this), platformShare),
+            "Transfer failed"
         );
-        maximumDeposit = _maximumDeposit;
-        emit MaximumDepositUpdated(_maximumDeposit);
+
+        pot.attemptsCount++;
+
+        uint256 attemptId = nextAttemptId++;
+        uint256 difficulty = (pot.attemptsCount % DIFFICULTY_MOD) + 2;
+
+        attempts[attemptId] = Attempt({
+            id: attemptId,
+            potId: potId,
+            hunter: msg.sender,
+            expiresAt: block.timestamp + 300,
+            difficulty: difficulty,
+            isCompleted: false
+        });
+
+        emit PotAttempted(attemptId, potId, msg.sender, block.timestamp);
+        return attemptId;
     }
 
-    /**
-     * @dev Update fee percentage
-     * @param _feePercentage New fee percentage in basis points
-     */
-    function setFeePercentage(uint256 _feePercentage) external onlyOwner {
-        require(_feePercentage <= 1000, "Fee cannot exceed 10%");
-        feePercentage = _feePercentage;
-        emit FeePercentageUpdated(_feePercentage);
+    function attemptCompleted(
+        uint256 attemptId,
+        bool status
+    ) external nonReentrant {
+        if (msg.sender != trustedOracle) revert Unauthorized();
+
+        Attempt storage attempt = attempts[attemptId];
+        MoneyPotData storage pot = pots[attempt.potId];
+
+        if (!pot.isActive) revert PotNotActive();
+        if (block.timestamp >= pot.expiresAt) revert ExpiredPot();
+        if (block.timestamp >= attempt.expiresAt) revert AttemptExpired();
+        if (attempt.isCompleted) revert AttemptCompleted();
+
+        attempt.isCompleted = true;
+
+        if (status) {
+            pot.isActive = false;
+
+            uint256 hunterShare = (pot.totalAmount * HUNTER_SHARE_PERCENT) /
+                100;
+
+            require(
+                this.transfer(attempt.hunter, hunterShare),
+                "Transfer failed"
+            );
+            // Note: We can't burn tokens from the underlying contract, so we keep the platform share
+            // In a real implementation, you might want to send it to a treasury or burn mechanism
+
+            emit PotSolved(attempt.potId, attempt.hunter, block.timestamp);
+        } else {
+            emit PotFailed(attemptId, attempt.hunter, block.timestamp);
+        }
     }
 
-    /**
-     * @dev Update fee recipient
-     * @param _feeRecipient New fee recipient address
-     */
-    function setFeeRecipient(address _feeRecipient) external onlyOwner {
-        require(_feeRecipient != address(0), "Invalid fee recipient");
-        feeRecipient = _feeRecipient;
-        emit FeeRecipientUpdated(_feeRecipient);
+    function expirePot(uint256 potId) external nonReentrant {
+        MoneyPotData storage pot = pots[potId];
+
+        if (!pot.isActive) revert PotNotActive();
+        if (block.timestamp < pot.expiresAt) revert NotExpired();
+
+        pot.isActive = false;
+        require(this.transfer(pot.creator, pot.totalAmount), "Transfer failed");
+
+        emit PotExpired(potId, pot.creator, block.timestamp);
     }
 
-    /**
-     * @dev Pause the contract
-     */
-    function pause() external onlyOwner {
-        _pause();
+    // View functions
+    function getBalance(address account) external view returns (uint256) {
+        return this.balanceOf(account);
     }
 
-    /**
-     * @dev Unpause the contract
-     */
-    function unpause() external onlyOwner {
-        _unpause();
+    function getPots() external view returns (uint256[] memory) {
+        return potIds;
     }
 
-    /**
-     * @dev Receive function to accept direct ETH transfers
-     */
-    receive() external payable {
-        revert("Direct transfers not allowed, use deposit()");
+    function getActivePots() external view returns (uint256[] memory) {
+        uint256 count = 0;
+        for (uint256 i = 0; i < potIds.length; i++) {
+            if (pots[potIds[i]].isActive) count++;
+        }
+
+        uint256[] memory active = new uint256[](count);
+        uint256 index = 0;
+        for (uint256 i = 0; i < potIds.length; i++) {
+            if (pots[potIds[i]].isActive) {
+                active[index++] = potIds[i];
+            }
+        }
+        return active;
     }
 
+    function getPot(uint256 potId) external view returns (MoneyPotData memory) {
+        return pots[potId];
+    }
+
+    function getAttempt(
+        uint256 attemptId
+    ) external view returns (Attempt memory) {
+        return attempts[attemptId];
+    }
+
+    // ============ ADMIN FUNCTIONS ============
+
     /**
-     * @dev Fallback function
+     * @dev Update verifier address (only owner)
      */
-    fallback() external payable {
-        revert("Direct transfers not allowed, use deposit()");
+    function updateVerifier(address _verifier) external onlyOwner {
+        require(_verifier != address(0), "Invalid verifier");
+        trustedOracle = _verifier;
     }
 }
