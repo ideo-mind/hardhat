@@ -37,9 +37,14 @@ function loadPrivateKeys(): Hex[] {
   // Use default test key if no valid keys found
   if (keys.size === 0) {
     const isProduction = process.env.NODE_ENV === "production"
+    const isTestnet =
+      process.env.HARDHAT_NETWORK &&
+      !["hardhat", "localhost"].includes(process.env.HARDHAT_NETWORK)
 
-    if (isProduction) {
-      throw new Error("No private keys configured for production deployment!")
+    if (isProduction || isTestnet) {
+      throw new Error(
+        "No private keys configured for production/testnet deployment!"
+      )
     }
 
     console.log("⚠️  No private keys found. Using default test key.")

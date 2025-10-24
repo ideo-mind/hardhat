@@ -1,48 +1,85 @@
-import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
-import { parseEther } from "viem";
+import { buildModule } from "@nomicfoundation/hardhat-ignition/modules"
+import { parseEther } from "viem"
 
 /**
- * MoneyPot deployment module
+ * MoneyPot deployment module with pyUSD/ERC20 token support
  *
- * This module deploys the MoneyPot contract with configurable parameters.
- * Parameters can be passed via command line or environment variables.
+ * This module deploys the MoneyPot contract with automatic token detection:
+ * - If pyUSD is configured in the network, it uses pyUSD
+ * - Otherwise, it deploys a MockERC20 token and uses that
  *
  * Example deployment:
- * npx hardhat ignition deploy ignition/modules/MoneyPot.ts --network sepolia --parameters ignition/parameters/sepolia.json
+ * npx hardhat ignition deploy ignition/modules/MoneyPot.ts --network localhost
+ * npx hardhat ignition deploy ignition/modules/MoneyPot.ts --network sepolia
  */
 const MoneyPotModule = buildModule("MoneyPotModule", (m) => {
   // Get deployment parameters with defaults
-  const minimumDeposit = m.getParameter("minimumDeposit", parseEther("0.01")); // 0.01 ETH default
-  const maximumDeposit = m.getParameter("maximumDeposit", parseEther("10")); // 10 ETH default
-  const feePercentage = m.getParameter("feePercentage", 100n); // 1% default (100 basis points)
-  const feeRecipient = m.getParameter("feeRecipient", m.getAccount(4)); // Use account 4 as default fee recipient
+  const trustedOracle = m.getParameter("trustedOracle", m.getAccount(1)) // Use account 1 as oracle by default
+  const usePyUSD = m.getParameter("usePyUSD", false) // Set to true to force pyUSD usage
+  const pyUSDAddress = m.getParameter(
+    "pyUSDAddress",
+    "0x0000000000000000000000000000000000000000"
+  )
+
+  // MockERC20 parameters (used when pyUSD is not available)
+  const tokenName = m.getParameter("tokenName", "Mock USDC")
+  const tokenSymbol = m.getParameter("tokenSymbol", "MUSDC")
+  const tokenDecimals = m.getParameter("tokenDecimals", 6)
+  const tokenInitialSupply = m.getParameter(
+    "tokenInitialSupply",
+    parseEther("1000000")
+  ) // 1M tokens
 
   // Log deployment parameters
-  console.log("🚀 Deploying MoneyPot with parameters:");
-  console.log(`   Minimum Deposit: ${minimumDeposit} wei`);
-  console.log(`   Maximum Deposit: ${maximumDeposit} wei`);
-  console.log(`   Fee Percentage: ${feePercentage} basis points`);
-  console.log(`   Fee Recipient: ${feeRecipient}`);
+  console.log("🚀 Deploying MoneyPot with parameters:")
+  console.log(`   Trusted Oracle: ${trustedOracle}`)
+  console.log(`   Use pyUSD: ${usePyUSD}`)
+  console.log(`   pyUSD Address: ${pyUSDAddress}`)
+
+  // Determine which token to use
+  let underlyingToken: any
+  let tokenDeployed = false
+
+  if (
+    usePyUSD &&
+    pyUSDAddress !== "0x0000000000000000000000000000000000000000"
+  ) {
+    console.log("📦 Using existing pyUSD token")
+    // Use existing pyUSD contract
+    underlyingToken = m.contractAt("IERC20Metadata", pyUSDAddress)
+  } else {
+    console.log("📦 Deploying MockERC20 token")
+    // Deploy MockERC20 token
+    underlyingToken = m.contract("MockERC20", [
+      tokenName,
+      tokenSymbol,
+      tokenDecimals,
+      tokenInitialSupply,
+    ])
+    tokenDeployed = true
+  }
 
   // Deploy the MoneyPot contract
-  const moneyPot = m.contract("MoneyPot", [
-    minimumDeposit,
-    maximumDeposit,
-    feePercentage,
-    feeRecipient,
-  ]);
+  const moneyPot = m.contract("MoneyPot", [])
 
-  // Set a descriptive ID for the contract
-  m.call(moneyPot, "getPotStats", [], {
-    id: "check-initial-stats",
-    after: [moneyPot],
-  });
+  // Initialize MoneyPot with the token and oracle
+  m.call(moneyPot, "initialize", [underlyingToken, trustedOracle], {
+    id: "initialize-money-pot",
+    after: [moneyPot, underlyingToken],
+  })
 
-  // Return the deployed contract
-  return { moneyPot };
-});
+  // Return the deployed contracts
+  return {
+    moneyPot,
+    underlyingToken,
+    trustedOracle,
+    tokenDeployed,
+    tokenName: tokenDeployed ? tokenName : "pyUSD",
+    tokenSymbol: tokenDeployed ? tokenSymbol : "pyUSD",
+  }
+})
 
-export default MoneyPotModule;
+export default MoneyPotModule
 
 // Export types for use in tests and scripts
-export type MoneyPotDeployment = ReturnType<typeof MoneyPotModule["_deploy"]>;
+export type MoneyPotDeployment = ReturnType<(typeof MoneyPotModule)["_deploy"]>
