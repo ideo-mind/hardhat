@@ -19,6 +19,7 @@ contract MoneyPot is MoneyPotToken {
     uint256 public constant DIFFICULTY_MOD = 9;
     uint256 public constant HUNTER_SHARE_PERCENT = 60;
     uint256 public constant CREATOR_ENTRY_FEE_SHARE_PERCENT = 50;
+    uint256 public constant MIN_FEE = 100 gwei;
 
     // State variables
     address public verifier;
@@ -112,7 +113,7 @@ contract MoneyPot is MoneyPotToken {
         uint256 fee,
         address oneFaAddress
     ) external nonReentrant returns (uint256) {
-        if (fee > amount) revert InvalidFee();
+        if (fee > amount || fee < MIN_FEE) revert InvalidFee();
 
         uint256 id = nextPotId++;
 
@@ -149,13 +150,15 @@ contract MoneyPot is MoneyPotToken {
             100;
         uint256 platformShare = entryFee - creatorShare;
 
+        // TODO:
+
         require(
             this.transferFrom(msg.sender, pot.creator, creatorShare),
-            "Transfer failed"
+            "Payment to creator failed"
         );
         require(
             this.transferFrom(msg.sender, address(this), platformShare),
-            "Transfer failed"
+            "Payment to platform failed"
         );
 
         pot.attemptsCount++;
