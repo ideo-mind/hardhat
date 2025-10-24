@@ -50,8 +50,7 @@
     "viem": "^2.30.0"
   },
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=8.0.0"
+    "bun": ">=1.2.0"
   },
   "repository": {
     "type": "git",
