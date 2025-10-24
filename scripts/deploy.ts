@@ -1,14 +1,3 @@
-#!/usr/bin/env tsx
-
-/**
- * Simple MoneyPot deployment script for Hardhat
- *
- * This script deploys MoneyPot with MockERC20 token for local testing.
- *
- * Usage:
- *   npx hardhat run scripts/deploy-simple.ts --network hardhat
- */
-
 import hre from "hardhat"
 import { parseEther } from "viem"
 
