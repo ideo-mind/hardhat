@@ -153,7 +153,6 @@ const config: _Config = {
 
     etherscan: {
     apiKey: {
-      torusM: "empty",
       cc: "empty",
       somnia: "empty",
       default: process.env.ETHERSCAN_API_KEY,
