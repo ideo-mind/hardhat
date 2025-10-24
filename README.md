@@ -40,18 +40,42 @@ To run the deployment to a local chain:
 npx hardhat ignition deploy ignition/modules/Counter.ts
 ```
 
-To run the deployment to Sepolia, you need an account with funds to send the transaction. The provided Hardhat configuration includes a Configuration Variable called `SEPOLIA_PRIVATE_KEY`, which you can use to set the private key of the account you want to use.
+To run deployments to any of the supported networks (Sepolia, Somnia, or Chiliz), you need an account with funds to send the transaction. The provided Hardhat configuration uses two private keys:
 
-You can set the `SEPOLIA_PRIVATE_KEY` variable using the `hardhat-keystore` plugin or by setting it as an environment variable.
+- `ADMIN_PRIVATE_KEY` - Used for contract deployments and main transactions
+- `VERIFIER_PRIVATE_KEY` - Used for verification operations (optional)
 
-To set the `SEPOLIA_PRIVATE_KEY` config variable using `hardhat-keystore`:
+To set these keys, create a `.env` file in your project root:
 
 ```shell
-npx hardhat keystore set SEPOLIA_PRIVATE_KEY
+# Required for deployments
+ADMIN_PRIVATE_KEY=your_admin_private_key_here
+
+# Optional for verification
+VERIFIER_PRIVATE_KEY=your_verifier_private_key_here
+
+# Optional API keys for enhanced Sepolia RPC
+ALCHEMY_KEY=your_alchemy_key_here
+INFURA_KEY=your_infura_key_here
 ```
 
-After setting the variable, you can run the deployment with the Sepolia network:
+After setting the variable, you can run deployments to any of the supported networks:
 
 ```shell
+# Sepolia testnet
 npx hardhat ignition deploy --network sepolia ignition/modules/Counter.ts
+
+# Somnia network
+npx hardhat ignition deploy --network somnia ignition/modules/Counter.ts
+
+# Chiliz Chain
+npx hardhat ignition deploy --network chiliz ignition/modules/Counter.ts
 ```
+
+### Supported Networks
+
+- **hardhat**: Local development network (default)
+- **localhost**: Local node at http://127.0.0.1:8545
+- **sepolia**: Ethereum Sepolia testnet (chainId: 11155111)
+- **somnia**: Somnia network (chainId: 50311)
+- **chiliz**: Chiliz Chain (chainId: 88888)

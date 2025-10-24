@@ -1,14 +1,57 @@
 {
-  "name": "hardhat",
+  "name": "hardhat-moneypot",
   "version": "1.0.0",
+  "description": "MoneyPot contracts using Hardhat 3",
   "type": "module",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "node": "hardhat node",
+    "deploy:local": "hardhat ignition deploy ignition/modules/MoneyPot.ts --network localhost",
+    "deploy:sepolia": "hardhat ignition deploy ignition/modules/MoneyPot.ts --network sepolia --verify",
+    "clean": "hardhat clean && rm -rf ignition/deployments",
+    "coverage": "hardhat coverage",
+    "format": "prettier --write '**/*.{js,ts,json,sol}'",
+    "lint": "prettier --check '**/*.{js,ts,json,sol}'"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.4.0",
+    "dotenv": "^17.2.3"
+  },
   "devDependencies": {
     "@nomicfoundation/hardhat-ignition": "^3.0.0",
+    "@nomicfoundation/hardhat-ignition-viem": "^3.0.0",
     "@nomicfoundation/hardhat-toolbox-viem": "^5.0.0",
+    "@nomicfoundation/hardhat-verify": "^2.0.9",
+    "@nomicfoundation/hardhat-viem": "^2.0.3",
     "@types/node": "^22.8.5",
+    "chai": "^4.5.0",
     "forge-std": "foundry-rs/forge-std#v1.9.4",
     "hardhat": "^3.0.8",
+    "hardhat-gas-reporter": "^2.2.0",
+    "prettier": "^3.3.3",
+    "prettier-plugin-solidity": "^1.3.1",
     "typescript": "~5.8.0",
     "viem": "^2.30.0"
-  }
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/hardhat-moneypot"
+  },
+  "keywords": [
+    "ethereum",
+    "smart-contracts",
+    "hardhat",
+    "moneypot",
+    "1p",
+    "solidity",
+    "blockchain"
+  ],
+  "author": "",
+  "license": "MIT",
+  "private": true
 }
