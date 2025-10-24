@@ -1,0 +1,8 @@
+{
+  "MoneyPotModule": {
+    "minimumDeposit": "100000000000000",
+    "maximumDeposit": "10000000000000000000",
+    "feePercentage": "100",
+    "feeRecipient": "0x0000000000000000000000000000000000000000"
+  }
+}
