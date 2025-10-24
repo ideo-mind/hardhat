@@ -3,14 +3,16 @@ import "@nomicfoundation/hardhat-toolbox-viem"
 import * as dotenv from "dotenv"
 import { HardhatUserConfig } from "hardhat/config"
 import * as process from "process"
+import { NetworkUserConfig } from "hardhat/types"
+import { ACCOUNT_ADDRESSES, PRIVATE_KEYS } from "./utils/accounts"
+
+// Import tasks
+// import "./tasks"
 
 // Load environment variables
 const ENV_FILE = process.env.CONFIG || "./.env"
 console.log(`ENV_FILE is ${ENV_FILE}`)
 dotenv.config({ path: ENV_FILE })
-
-import { NetworkUserConfig } from "hardhat/types"
-import { ACCOUNT_ADDRESSES, PRIVATE_KEYS } from "./utils/accounts"
 
 let NETWORK = process.env.NETWORK || "hardhat"
 const INFURA_KEY = process.env.INFURA_KEY || ""
@@ -140,6 +142,8 @@ const config: _Config = {
               "https://faucet.paxos.com",
             ],
           },
+        },
+      },
     },
   },
 
@@ -151,7 +155,7 @@ const config: _Config = {
     artifacts: "./artifacts",
   },
 
-    etherscan: {
+  etherscan: {
     apiKey: {
       cc: "empty",
       somnia: "empty",
@@ -184,29 +188,22 @@ const config: _Config = {
     apiUrl: "https://sourcify.dev/server",
     browserUrl: "https://repo.sourcify.dev",
   },
+  // TypeChain configuration
   typechain: {
     outDir: "typechain-types",
     target: "ethers-v6",
-    alwaysGenerateOverloads: false, // should overloads with full signatures like deposit(uint256) be generated always, even if there are no overloads?
-    externalArtifacts: ["externalArtifacts/*.json"], // optional array of glob patterns with external artifacts to process (for example external libs from node_modules)
-    dontOverrideCompile: false, // defaults to false
+    alwaysGenerateOverloads: false,
+    dontOverrideCompile: false,
   },
-
 
   // Ignition configuration
   ignition: {
     blockPollingInterval: 1_000,
-    timeBeforeBumpingFees: 3 * 60 * 1_000,
+    timeBeforeBumpingFees: 180000,
     maxFeeBumps: 4,
     requiredConfirmations: 1,
     disableFeeBumping: false,
   },
 }
-
-// Log configuration info
-console.log(`🔧 Default Network: ${NETWORK}`)
-console.log(`🔑 Loaded ${PRIVATE_KEYS.length} account(s)`)
-if (INFURA_KEY) console.log(`📡 Using Infura API`)
-if (ALCHEMY_KEY) console.log(`⚗️ Using Alchemy API`)
 
 export default config
