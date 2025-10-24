@@ -6,12 +6,13 @@ import hardhatToolboxMochaEthersPlugin from "@nomicfoundation/hardhat-toolbox-mo
 import type { HardhatUserConfig } from "hardhat/config"
 import * as process from "process"
 import type { NetworkUserConfig } from "hardhat/types/config"
+
+// import dotenvx from "@dotenvx/dotenvx"
+// dotenvx.config()
+// import dotenv from "dotenv"
+// dotenv.config({ path: "./.env" })
+
 import { ACCOUNT_ADDRESSES, PRIVATE_KEYS } from "./utils/accounts"
-
-import dotenvx from "@dotenvx/dotenvx"
-
-dotenvx.config()
-
 // Import tasks
 import "./tasks"
 
