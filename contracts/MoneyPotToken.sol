@@ -32,6 +32,7 @@ contract MoneyPotToken is Ownable, ReentrancyGuard {
      */
     function initializeToken(IERC20Metadata _underlying) public onlyOwner {
         require(address(underlying) == address(0), "Already initialized");
+        require(address(_underlying) != address(0), "Invalid underlying token");
         underlying = _underlying;
     }
 
