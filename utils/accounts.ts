@@ -1,155 +1,197 @@
-import { Address, getAddress, Hex } from "viem"
-import { privateKeyToAccount } from "viem/accounts"
-import { ethers } from "ethers"
 import { Account } from "./types"
+import { privateKeyToAccount } from "viem/accounts"
+import { getAddress } from "viem"
+import * as process from "process"
 import { HardhatRuntimeEnvironment } from "hardhat/types/hre"
 
-/**
- * Default test private key (from Hardhat's default first account)
- * DO NOT USE IN PRODUCTION!
- */
-const DEFAULT_TEST_PRIVATE_KEY: Hex =
-  "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+let useDefaultValue = true
 
-/**
- * Load private keys from environment variables
- * Supports ADMIN_PRIVATE_KEY and VERIFIER_PRIVATE_KEY
- */
-function loadPrivateKeys(): Hex[] {
-  const keys: Set<Hex> = new Set()
-
-  // Add admin key if available
-  if (process.env.ADMIN_PRIVATE_KEY) {
-    const adminKey = formatPrivateKey(process.env.ADMIN_PRIVATE_KEY)
-    if (adminKey) keys.add(adminKey)
-  }
-
-  // Add verifier key if available
-  if (process.env.VERIFIER_PRIVATE_KEY) {
-    const verifierKey = formatPrivateKey(process.env.VERIFIER_PRIVATE_KEY)
-    if (verifierKey) keys.add(verifierKey)
-  }
-
-  // Use default test key if no valid keys found
-  if (keys.size === 0) {
-    const isProduction = process.env.NODE_ENV === "production"
-    const isTestnet =
-      process.env.HARDHAT_NETWORK &&
-      !["hardhat", "localhost"].includes(process.env.HARDHAT_NETWORK)
-
-    // For hardhat/localhost networks, always use default test key
-    if (
-      process.env.HARDHAT_NETWORK === "hardhat" ||
-      process.env.HARDHAT_NETWORK === "localhost" ||
-      !process.env.HARDHAT_NETWORK // Default to hardhat if no network specified
-    ) {
-      console.log("🔧 Using default test key for local development")
-      keys.add(DEFAULT_TEST_PRIVATE_KEY)
-    } else if (isProduction || isTestnet) {
-      throw new Error(
-        "No private keys configured for production/testnet deployment!"
-      )
-    } else {
-      console.log("⚠️  No private keys found. Using default test key.")
-      console.log("⚠️  DO NOT use this key in production!")
-      keys.add(DEFAULT_TEST_PRIVATE_KEY)
-    }
-  }
-
-  return Array.from(keys)
+export function setDefaultValue(flag: boolean) {
+  useDefaultValue = flag
+  // console.debug("set default value to ", flag)
 }
 
-/**
- * Format and validate a private key
- */
-function formatPrivateKey(key: string): Hex | null {
+export const loadEnv = (name: string, defaultValue: string) => {
+  const pKey = process.env[name]
+  if (pKey) {
+    return pKey
+  }
+  console.error(
+    `Environment variable ${name} not found, using default value ${defaultValue}`
+  )
+  console.debug("hardhat value be careful!!")
+  if (useDefaultValue) {
+    return defaultValue
+  }
+
+  return ""
+}
+
+export const loadPrivateKey = (name: string, defaultValue: string) => {
+  return loadEnv(`${name.toUpperCase()}_PRIVATE_KEY`, defaultValue).trim()
+}
+
+export const loadAddress = (name: string, privateKey: string) => {
+  let address: string
+
   try {
-    // Skip encrypted keys (they start with "encrypted:")
-    if (key.startsWith("encrypted:")) {
-      console.log(
-        "⚠️  Encrypted private key detected. Please decrypt using dotenvx."
-      )
-      return null
-    }
-
-    // Ensure key starts with 0x
-    if (!key.startsWith("0x")) {
-      key = `0x${key}`
-    }
-
-    // Validate key length (64 hex characters + 0x prefix = 66 total)
-    if (key.length !== 66) {
-      console.warn(
-        `⚠️  Invalid private key length: ${key.length}. Expected 66 characters.`
-      )
-      return null
-    }
-
-    // Validate hex format
-    if (!/^0x[0-9a-fA-F]{64}$/.test(key)) {
-      console.warn(`⚠️  Invalid private key format.`)
-      return null
-    }
-
-    return key as Hex
-  } catch (error) {
-    console.error("Error formatting private key:", error)
-    return null
+    const account = privateKeyToAccount(privateKey as `0x${string}`)
+    address = getAddress(account.address)
+    console.debug(name + ": " + address)
+  } catch (error: any) {
+    console.error(
+      `Error deriving address from private key for ${name}: ${error.message}`
+    )
+    process.exit(1)
   }
+
+  return address
 }
 
-/**
- * Generate account addresses from private keys
- */
-function generateAccountAddresses(privateKeys: Hex[]): Record<string, Address> {
-  const accounts: Record<string, Address> = {}
+// the default values here are the hardhat default insecure accounts
+// this means that we get a reproducible dev environment between hardhat and geth
+export const ACCOUNTS: Account[] = [
+  {
+    name: "admin",
+    privateKey: loadPrivateKey(
+      "admin",
+      "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+    ),
+    metadata: {},
+  },
+  {
+    name: "verifier",
+    privateKey: loadPrivateKey(
+      "verifier",
+      "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+    ),
+    metadata: {},
+  },
+  {
+    name: "moneypot_oracle",
+    privateKey: loadPrivateKey(
+      "moneypot_oracle",
+      "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+    ),
+    metadata: {},
+  },
+  {
+    name: "",
+    privateKey: loadEnv(
+      "PRIVATE_KEY",
+      "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+    ),
+    metadata: {},
+  },
+].map((account: Account) => {
+  // Check if the address is not already present
+  if (!account.address) {
+    // Derive the address using the loadAddress function
+    account.address = loadAddress(account.name, account.privateKey)
+  }
+  return account
+})
 
-  privateKeys.forEach((key, index) => {
-    try {
-      const account = privateKeyToAccount(key)
-      const address = getAddress(account.address)
+// map of account name -> account
+export const NAMED_ACCOUNTS = ACCOUNTS.reduce<Record<string, Account>>(
+  (all, acc) => {
+    all[acc.name] = acc
+    return all
+  },
+  {}
+)
 
-      // Named accounts
-      switch (index) {
-        case 0:
-          // Admin account
-          accounts.deployer = address
-          accounts.owner = address
-          accounts.admin = address
-          break
-        case 1:
-          // Verifier account
-          accounts.verifier = address
-          accounts.operator = address
-          break
-      }
+// map of account name -> account address
+export const ACCOUNT_ADDRESSES = ACCOUNTS.reduce<Record<string, string>>(
+  (all, acc) => {
+    all[acc.name] = acc.address
+    return all
+  },
+  {}
+)
 
-      // Numbered accounts
-      accounts[`account${index}`] = address
-    } catch (error) {
-      console.error(
-        `Error generating address from private key ${index}:`,
-        error
-      )
-    }
-  })
-
-  return accounts
-}
-
-// Export private keys array (matching unreal-hardhat)
-export const PRIVATE_KEYS: Hex[] = loadPrivateKeys()
-
-// Export account addresses (matching unreal-hardhat)
-export const ACCOUNT_ADDRESSES: Record<string, Address> =
-  generateAccountAddresses(PRIVATE_KEYS)
+// flat list of private keys in order
+export const PRIVATE_KEYS = ACCOUNTS.map((acc) => acc.privateKey)
 
 // Export individual account addresses for convenience
-export const DEPLOYER = ACCOUNT_ADDRESSES.deployer
-export const OWNER = ACCOUNT_ADDRESSES.owner
+export const DEPLOYER = ACCOUNT_ADDRESSES.admin
+export const OWNER = ACCOUNT_ADDRESSES.admin
 export const ADMIN = ACCOUNT_ADDRESSES.admin
-export const VERIFIER = ACCOUNT_ADDRESSES.verifier || ACCOUNT_ADDRESSES.deployer
-export const OPERATOR = ACCOUNT_ADDRESSES.operator || ACCOUNT_ADDRESSES.deployer
+export const VERIFIER = ACCOUNT_ADDRESSES.verifier || ACCOUNT_ADDRESSES.admin
+export const OPERATOR = ACCOUNT_ADDRESSES.verifier || ACCOUNT_ADDRESSES.admin
+
+export const getAccount = (name: string) => {
+  const account = NAMED_ACCOUNTS[name]
+  if (!account) {
+    throw new Error(`Unknown account ${name}`)
+  }
+  return account
+}
+
+export async function getBalance(
+  account: string,
+  hre: HardhatRuntimeEnvironment
+) {
+  // Try to use ethers if available, otherwise use viem
+  try {
+    // @ts-ignore - ethers might be available through the plugin
+    const balance = await hre.ethers.provider.getBalance(account)
+    return balance
+  } catch (error) {
+    // Fallback to viem if ethers is not available
+    try {
+      // @ts-ignore - viem might be available through the plugin
+      const balance = await hre.viem.getPublicClient().getBalance({
+        address: account as `0x${string}`,
+      })
+      return balance
+    } catch (viemError) {
+      throw new Error("Neither ethers nor viem provider available")
+    }
+  }
+}
+
+export function formatEther(balance: bigint) {
+  // Convert bigint to string and format as ether
+  return (Number(balance) / 1e18).toString()
+}
+
+export async function getBalanceInEther(
+  account: string,
+  hre: HardhatRuntimeEnvironment
+) {
+  return formatEther(await getBalance(account, hre))
+}
+
+export function getPublicAddress(
+  privateKey: string,
+  hre?: HardhatRuntimeEnvironment
+): string {
+  try {
+    const account = privateKeyToAccount(privateKey as `0x${string}`)
+    return getAddress(account.address)
+  } catch (error) {
+    console.error("Error deriving address from private key:", error)
+    throw new Error("Invalid private key")
+  }
+}
+
+export function getAddressFromInput(addressOrPrivateKey: string): string {
+  try {
+    // Check if it's already a valid address
+    if (getAddress(addressOrPrivateKey)) {
+      return getAddress(addressOrPrivateKey)
+    }
+
+    // Try to derive address from private key
+    const account = privateKeyToAccount(addressOrPrivateKey as `0x${string}`)
+    return getAddress(account.address)
+  } catch (error) {
+    throw new Error(
+      "Invalid input: not a valid Ethereum address or private key"
+    )
+  }
+}
 
 /**
  * Log account information
@@ -169,96 +211,6 @@ export function logAccounts(): void {
 // Auto-log accounts in verbose mode
 if (process.env.VERBOSE === "true") {
   logAccounts()
-}
-
-/**
- * Get account by name (ethers v6 compatible)
- */
-export function getAccount(name: string): Account {
-  const address = ACCOUNT_ADDRESSES[name]
-  if (!address) {
-    throw new Error(`Unknown account ${name}`)
-  }
-
-  // Find the private key for this account
-  const privateKey = PRIVATE_KEYS.find((key) => {
-    try {
-      const account = privateKeyToAccount(key)
-      return getAddress(account.address) === getAddress(address)
-    } catch {
-      return false
-    }
-  })
-
-  if (!privateKey) {
-    throw new Error(`Private key not found for account ${name}`)
-  }
-
-  return {
-    name,
-    address,
-    privateKey,
-    metadata: {},
-  }
-}
-
-/**
- * Get address from address or private key (ethers v6 compatible)
- */
-export function getAddressFromInput(addressOrKey: string): string {
-  try {
-    // Check if it's already a valid address
-    if (ethers.isAddress(addressOrKey)) {
-      return ethers.getAddress(addressOrKey)
-    }
-
-    // Try to derive address from private key
-    const wallet = new ethers.Wallet(addressOrKey)
-    return wallet.address
-  } catch (error) {
-    throw new Error(
-      "Invalid input: not a valid Ethereum address or private key"
-    )
-  }
-}
-
-/**
- * Get balance using ethers v6 (for tasks)
- */
-export async function getBalance(
-  account: string,
-  hre: HardhatRuntimeEnvironment
-): Promise<bigint> {
-  const balance = await hre.ethers.provider.getBalance(account)
-  return balance
-}
-
-/**
- * Format ether balance
- */
-export function formatEther(balance: bigint): string {
-  return ethers.formatEther(balance)
-}
-
-/**
- * Get balance in ether (for tasks)
- */
-export async function getBalanceInEther(
-  account: string,
-  hre: HardhatRuntimeEnvironment
-): Promise<string> {
-  return formatEther(await getBalance(account, hre))
-}
-
-/**
- * Get public address from private key (ethers v6 compatible)
- */
-export function getPublicAddress(
-  privateKey: string,
-  hre?: HardhatRuntimeEnvironment
-): string {
-  const wallet = new ethers.Wallet(privateKey)
-  return wallet.address
 }
 
 export default {
