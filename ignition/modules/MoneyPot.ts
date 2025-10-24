@@ -18,8 +18,8 @@ const MoneyPotModule = buildModule("MoneyPotModule", (m) => {
 
   // Log deployment parameters
   console.log("🚀 Deploying MoneyPot with parameters:")
-  console.log(`   Verifier: ${verifier}`)
-  console.log(`   Token: ${token}`)
+  console.log(`   Verifier: ${verifier.defaultValue}`)
+  console.log(`   Token: ${token.defaultValue}`)
 
   // Use existing token contract (configured in parameters)
   const underlyingToken = m.contractAt("IERC20Metadata", token)

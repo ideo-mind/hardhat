@@ -26,6 +26,8 @@
     "ethers5": "npm:ethers@^5"
   },
   "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@dotenvx/dotenvx": "^1.51.0",
     "@nomicfoundation/hardhat-ignition": "^3.0.0",
     "@nomicfoundation/hardhat-ignition-viem": "^3.0.0",
     "@nomicfoundation/hardhat-toolbox-mocha-ethers": "^3.0.0",
@@ -38,7 +40,6 @@
     "forge-std": "foundry-rs/forge-std#v1.9.4",
     "hardhat": "^3.0.9",
     "hardhat-gas-reporter": "^2.2.0",
-    "@biomejs/biome": "^1.9.4",
     "tsx": "^4.19.2",
     "typechain": "^8.3.2",
     "typescript": "~5.8.0",
