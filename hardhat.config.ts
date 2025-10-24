@@ -151,6 +151,49 @@ const config: _Config = {
     artifacts: "./artifacts",
   },
 
+    etherscan: {
+    apiKey: {
+      torusM: "empty",
+      cc: "empty",
+      somnia: "empty",
+      default: process.env.ETHERSCAN_API_KEY,
+    },
+
+    customChains: [
+      {
+        network: "cc",
+        chainId: 102031,
+        urls: {
+          apiURL: "https://creditcoin-testnet.blockscout.com/api",
+          browserURL: "https://creditcoin-testnet.blockscout.com",
+        },
+      },
+      {
+        network: "somnia",
+        chainId: 50312,
+        urls: {
+          apiURL: "https://shannon-explorer.somnia.network/api",
+          browserURL: "https://shannon-explorer.somnia.network",
+        },
+      },
+    ],
+  },
+  sourcify: {
+    // Disabled by default
+    // Doesn't need an API key
+    enabled: true,
+    apiUrl: "https://sourcify.dev/server",
+    browserUrl: "https://repo.sourcify.dev",
+  },
+  typechain: {
+    outDir: "typechain-types",
+    target: "ethers-v6",
+    alwaysGenerateOverloads: false, // should overloads with full signatures like deposit(uint256) be generated always, even if there are no overloads?
+    externalArtifacts: ["externalArtifacts/*.json"], // optional array of glob patterns with external artifacts to process (for example external libs from node_modules)
+    dontOverrideCompile: false, // defaults to false
+  },
+
+
   // Ignition configuration
   ignition: {
     blockPollingInterval: 1_000,
