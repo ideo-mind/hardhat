@@ -1,12 +1,8 @@
-import * as dotenv from "dotenv"
 import { Address, getAddress, Hex } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
 import { ethers } from "ethers"
 import { HardhatRuntimeEnvironment } from "hardhat/types"
 import { Account } from "./types"
-
-// Load environment variables
-dotenv.config()
 
 /**
  * Default test private key (from Hardhat's default first account)

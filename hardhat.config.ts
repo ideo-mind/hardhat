@@ -1,9 +1,12 @@
 import "@nomicfoundation/hardhat-ignition"
 import "@nomicfoundation/hardhat-toolbox-viem"
+
+import hardhatToolboxMochaEthersPlugin from "@nomicfoundation/hardhat-toolbox-mocha-ethers"
+
 import type { HardhatUserConfig } from "hardhat/config"
 import * as process from "process"
-import { NetworkUserConfig } from "hardhat"
-import { ACCOUNT_ADDRESSES, PRIVATE_KEYS } from "./utils/accounts"
+import type { NetworkUserConfig } from "hardhat/types/config"
+import { ACCOUNT_ADDRESSES, PRIVATE_KEYS } from "utils/accounts"
 
 // Import tasks
 import "./tasks"
@@ -42,6 +45,7 @@ interface _Config extends HardhatUserConfig {
 }
 
 const config: _Config = {
+  plugins: [hardhatToolboxMochaEthersPlugin],
   solidity: {
     version: "0.8.28",
     settings: {
