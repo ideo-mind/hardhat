@@ -155,6 +155,24 @@ const config: _Config = {
     artifacts: "./artifacts",
   },
 
+  chainDescriptors: {
+    50312: {
+      name: "somnia",
+      blockExplorers: {
+        etherscan: {
+          name: "Somnia Explorer",
+          url: "https://shannon-explorer.somnia.network",
+          apiUrl: "https://shannon-explorer.somnia.network/api",
+        },
+      },
+    },
+  },
+  verify: {
+    blockscout: {
+      enabled: true,
+    },
+  },
+
   etherscan: {
     apiKey: {
       cc: "empty",
