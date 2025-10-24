@@ -1,16 +1,48 @@
-/* Based on https://github.com/tsconfig/bases/blob/501da2bcd640cf95c95805783e1012b992338f28/bases/node22.json */
 {
+  "include": [
+    "./hardhat.config.ts",
+    "./deploy",
+    "./scripts",
+    "./test",
+    "./utils"
+  ],
   "compilerOptions": {
-    "lib": ["es2023"],
-    "module": "node16",
-    "target": "es2022",
-    "strict": true,
+    "module": "commonjs",
     "esModuleInterop": true,
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ESNext",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "incremental": true,
     "skipLibCheck": true,
-    "moduleResolution": "node16",
-    "outDir": "dist",
-    "paths": {
-      "typechain-types/*": ["./typechain-types/*"]
-    }
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": false,
+    "paths": {},
+    "strict": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "resolveJsonModule": true
+  },
+  "paths": {
+    "@utils/*": [
+      "./utils/*"
+    ],  
+    "$utils/*": [
+      "./utils/*"
+    ],
+    "@test/*": [
+      "./test/*"
+    ],
+    "@scripts/*": [
+      "./scripts/*"
+    ]
   }
 }

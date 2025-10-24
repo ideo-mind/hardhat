@@ -3,8 +3,8 @@ import "@nomicfoundation/hardhat-toolbox-viem"
 import * as dotenv from "dotenv"
 import { HardhatUserConfig, task } from "hardhat/config"
 import * as process from "process"
-import { NetworkUserConfig } from "hardhat/types"
-import { ACCOUNT_ADDRESSES, PRIVATE_KEYS } from "./utils/accounts.js"
+import { NetworkUserConfig } from "hardhat"
+import { ACCOUNT_ADDRESSES, PRIVATE_KEYS } from "./utils/accounts"
 
 // Load environment variables
 const ENV_FILE = process.env.CONFIG || "./.env"
