@@ -6,7 +6,7 @@ import hardhatToolboxMochaEthersPlugin from "@nomicfoundation/hardhat-toolbox-mo
 import type { HardhatUserConfig } from "hardhat/config"
 import * as process from "process"
 import type { NetworkUserConfig } from "hardhat/types/config"
-import { ACCOUNT_ADDRESSES, PRIVATE_KEYS } from "utils/accounts"
+import { ACCOUNT_ADDRESSES, PRIVATE_KEYS } from "./utils/accounts"
 
 // Import tasks
 import "./tasks"
