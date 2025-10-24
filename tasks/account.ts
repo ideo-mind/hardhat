@@ -7,16 +7,16 @@ import {
   getBalance,
   getBalanceInEther,
   getPublicAddress,
-} from "../utils/accounts.js"
-import { Account } from "../utils/types.js"
-import { getSigner } from "../utils/web3.js"
-import { FundOut, Out } from "./account.d.js"
+} from "../utils/accounts"
+import { Account } from "../utils/types"
+import { getSigner } from "../utils/web3"
+import { FundOut, Out } from "./account.d"
 import {
   balanceOfMoneyPot,
   tokenBal,
   transferEther,
   transferToken,
-} from "./helpers.js"
+} from "./helpers"
 
 // ----- Tasks -----
 task("balance", "Prints an account's balance")

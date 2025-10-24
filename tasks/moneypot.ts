@@ -1,7 +1,7 @@
 import "@nomicfoundation/hardhat-toolbox-viem"
 import { task } from "hardhat/config"
-import { getAccount } from "../utils/accounts.js"
-import { connectMoneyPot } from "../utils/web3.js"
+import { getAccount } from "../utils/accounts"
+import { connectMoneyPot } from "../utils/web3"
 
 // Helper function to connect to MoneyPot contract
 async function connectMoneyPotContract(hre: any) {
@@ -20,7 +20,7 @@ task("moneypot:balance", "Get MoneyPot contract balance for an account")
   .addOption({
     name: "account",
     description: "Account to check balance for (defaults to admin)",
-    defaultValue: "admin"
+    defaultValue: "admin",
   })
   .setAction(async ({ account }, hre) => {
     try {
@@ -96,7 +96,7 @@ task("moneypot:deposit", "Deposit ETH into MoneyPot")
   .addOption({
     name: "account",
     description: "Account to use for deposit (defaults to admin)",
-    defaultValue: "admin"
+    defaultValue: "admin",
   })
   .setAction(
     async ({ amount, account }: { amount: string; account?: string }, hre) => {
@@ -139,7 +139,7 @@ task("moneypot:withdraw", "Withdraw ETH from MoneyPot")
   .addOption({
     name: "account",
     description: "Account to use for withdrawal (defaults to admin)",
-    defaultValue: "admin"
+    defaultValue: "admin",
   })
   .setAction(
     async ({ amount, account }: { amount: string; account?: string }, hre) => {
@@ -183,7 +183,7 @@ task("moneypot:withdrawAll", "Withdraw all ETH from MoneyPot")
   .addOption({
     name: "account",
     description: "Account to use for withdrawal (defaults to admin)",
-    defaultValue: "admin"
+    defaultValue: "admin",
   })
   .setAction(async ({ account }: { account?: string }, hre) => {
     try {
