@@ -150,7 +150,7 @@ contract MoneyPot is MoneyPotToken {
             100;
         uint256 platformShare = entryFee - creatorShare;
 
-        // TODO:
+        //TODO: support for ether payment
 
         require(
             this.transferFrom(msg.sender, pot.creator, creatorShare),
