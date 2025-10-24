@@ -31,9 +31,10 @@
     "ethers5": "npm:ethers@^5"
   },
   "devDependencies": {
+    "@nomicfoundation/hardhat-ignition": "^3.0.0",
     "@nomicfoundation/hardhat-ignition-viem": "^3.0.0",
     "@nomicfoundation/hardhat-toolbox-viem": "^5.0.0",
-    "@nomicfoundation/hardhat-viem": "^2.0.3",
+    "@nomicfoundation/hardhat-viem": "^3.0.0",
     "@typechain/ethers-v6": "^0.5.1",
     "@typechain/hardhat": "^9.1.0",
     "@types/node": "^22.8.5",

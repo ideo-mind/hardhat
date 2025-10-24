@@ -1,18 +1,12 @@
-import "@nomicfoundation/hardhat-ignition-viem"
+import "@nomicfoundation/hardhat-ignition"
 import "@nomicfoundation/hardhat-toolbox-viem"
-import * as dotenv from "dotenv"
-import { HardhatUserConfig, task } from "hardhat/config"
+import type { HardhatUserConfig } from "hardhat/config"
 import * as process from "process"
 import { NetworkUserConfig } from "hardhat"
 import { ACCOUNT_ADDRESSES, PRIVATE_KEYS } from "./utils/accounts"
 
 // Import tasks
 import "./tasks"
-
-// Load environment variables
-const ENV_FILE = process.env.CONFIG || "./.env"
-console.log(`ENV_FILE is ${ENV_FILE}`)
-dotenv.config({ path: ENV_FILE })
 
 let NETWORK = process.env.NETWORK || "hardhat"
 const INFURA_KEY = process.env.INFURA_KEY || ""
