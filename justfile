@@ -7,8 +7,8 @@ set export
 
 import? "local.justfile"
 
-start: 
-  bun start
+start *ARGS: 
+  bun start {{ARGS}}
 
 
 deploy-localhost:

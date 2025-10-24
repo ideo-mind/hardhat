@@ -7,7 +7,7 @@
     "compile": "hardhat compile",
     "build": "hardhat compile",
     "test": "hardhat test",
-    "node": "hardhat node",
+    "node": "hardhat node --network hardhat",
     "console": "hardhat console",
     "verify": "hardhat verify",
     "start": "hardhat node",
