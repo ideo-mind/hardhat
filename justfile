@@ -11,3 +11,5 @@ start:
   bun start
 
 
+deploy-localhost:
+  bun hardhat ignition deploy ignition/modules/MoneyPot.ts --network localhost --parameters ignition/parameters/localhost.json
