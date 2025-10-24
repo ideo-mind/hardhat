@@ -130,6 +130,16 @@ const config: _Config = {
       explorer: "https://creditcoin-testnet.blockscout.com",
       faucet: ["<discord url>"],
       confirmations: 1,
+      custom: {
+        tokens: {
+          pyUSD: {
+            // stubbed: from unreal token
+            address: "0x15EDeBfe6De62Fe4827C00d82e0230566600aF73",
+            faucet: [
+              "https://cloud.google.com/application/web3/faucet/ethereum/sepolia/pyusd",
+              "https://faucet.paxos.com",
+            ],
+          },
     },
   },
 
