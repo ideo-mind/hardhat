@@ -17,11 +17,11 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 contract MoneyPot is MoneyPotToken {
     // Constants
     uint256 public constant DIFFICULTY_MOD = 9;
-    uint256 public constant HUNTER_SHARE_PERCENT = 40;
+    uint256 public constant HUNTER_SHARE_PERCENT = 60;
     uint256 public constant CREATOR_ENTRY_FEE_SHARE_PERCENT = 50;
 
     // State variables
-    address public trustedOracle;
+    address public verifier;
 
     // Structs
     struct MoneyPotData {
@@ -94,17 +94,16 @@ contract MoneyPot is MoneyPotToken {
     /**
      * @dev Initialize the MoneyPot contract
      * @param _token Address of the ERC20 token to use
-     * @param _trustedOracle Address of the trusted oracle
+     * @param _verifier Address of the verifier
      */
     function initialize(
         IERC20Metadata _token,
-        address _trustedOracle
+        address _verifier
     ) external onlyOwner {
         // Initialize the underlying token
         initializeToken(_token);
 
-        // Set MoneyPot specific parameters
-        trustedOracle = _trustedOracle;
+        verifier = _verifier;
     }
 
     function createPot(
@@ -162,7 +161,7 @@ contract MoneyPot is MoneyPotToken {
         pot.attemptsCount++;
 
         uint256 attemptId = nextAttemptId++;
-        uint256 difficulty = (pot.attemptsCount % DIFFICULTY_MOD) + 2;
+        uint256 difficulty = (pot.attemptsCount % DIFFICULTY_MOD) + 3;
 
         attempts[attemptId] = Attempt({
             id: attemptId,
@@ -181,7 +180,7 @@ contract MoneyPot is MoneyPotToken {
         uint256 attemptId,
         bool status
     ) external nonReentrant {
-        if (msg.sender != trustedOracle) revert Unauthorized();
+        if (msg.sender != verifier) revert Unauthorized();
 
         Attempt storage attempt = attempts[attemptId];
         MoneyPotData storage pot = pots[attempt.potId];
@@ -266,6 +265,6 @@ contract MoneyPot is MoneyPotToken {
      */
     function updateVerifier(address _verifier) external onlyOwner {
         require(_verifier != address(0), "Invalid verifier");
-        trustedOracle = _verifier;
+        verifier = _verifier;
     }
 }
