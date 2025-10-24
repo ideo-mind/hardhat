@@ -16,7 +16,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
  */
 contract MoneyPot is MoneyPotToken {
     // Constants
-    uint256 public constant DIFFICULTY_MOD = 11;
+    uint256 public constant DIFFICULTY_MOD = 9;
     uint256 public constant HUNTER_SHARE_PERCENT = 40;
     uint256 public constant CREATOR_ENTRY_FEE_SHARE_PERCENT = 50;
 
