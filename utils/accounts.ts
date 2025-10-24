@@ -3,6 +3,7 @@ import { privateKeyToAccount } from "viem/accounts"
 import { getAddress } from "viem"
 import * as process from "process"
 import { HardhatRuntimeEnvironment } from "hardhat/types/hre"
+import { Wallet } from "ethers5"
 
 let useDefaultValue = true
 
@@ -34,9 +35,10 @@ export const loadPrivateKey = (name: string, defaultValue: string) => {
 export const loadAddress = (name: string, privateKey: string) => {
   let address: string
 
+
   try {
-    const account = privateKeyToAccount(privateKey as `0x${string}`)
-    address = getAddress(account.address)
+    const wallet = new Wallet(privateKey)
+    address = wallet.address
     console.debug(name + ": " + address)
   } catch (error: any) {
     console.error(
