@@ -15,7 +15,7 @@ contract CounterTest is Test {
     require(counter.x() == 0, "Initial value should be 0");
   }
 
-  function testFuzz_Inc(uint8 x) public {
+  function testFuzz_Inc(uint8 x) public { 
     for (uint8 i = 0; i < x; i++) {
       counter.inc();
     }
