@@ -1,38 +1,26 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "./MoneyPotToken.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 /**
  * @title MoneyPot
- * @dev MoneyPot contract that works with any ERC20 token
- * @notice This contract implements MoneyPot game mechanics using any ERC20 token
+ * @dev MoneyPot contract that inherits from MoneyPotToken and implements game mechanics
+ * @notice This contract combines token proxy functionality with MoneyPot game mechanics
  *
  * Architecture:
- * - Uses composition pattern with any ERC20 token
- * - Implements MoneyPot game logic with token interactions
- * - Maintains separation of concerns: token logic separate, game logic here
+ * - Inherits from MoneyPotToken for ERC20 proxy functionality
+ * - Implements MoneyPot game logic with proxied token
+ * - Maintains separation of concerns: token proxy logic in parent, game logic here
  */
-contract MoneyPot is
-    Initializable,
-    OwnableUpgradeable,
-    ReentrancyGuardUpgradeable,
-    UUPSUpgradeable
-{
-    using SafeERC20 for IERC20;
-
+contract MoneyPot is MoneyPotToken {
     // Constants
     uint256 public constant DIFFICULTY_MOD = 3;
     uint256 public constant HUNTER_SHARE_PERCENT = 40;
     uint256 public constant CREATOR_ENTRY_FEE_SHARE_PERCENT = 50;
 
     // State variables
-    IERC20 public token;
     address public trustedOracle;
 
     // Structs
@@ -101,37 +89,23 @@ contract MoneyPot is
     error AttemptCompleted();
     error Unauthorized();
 
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {
-        _disableInitializers();
-    }
+    constructor() {}
 
     /**
      * @dev Initialize the MoneyPot contract
      * @param _token Address of the ERC20 token to use
      * @param _trustedOracle Address of the trusted oracle
-     * @param _initialOwner Address of the initial owner
      */
     function initialize(
-        IERC20 _token,
-        address _trustedOracle,
-        address _initialOwner
-    ) public initializer {
-        __Ownable_init(_initialOwner);
-        __ReentrancyGuard_init();
-        __UUPSUpgradeable_init();
+        IERC20Metadata _token,
+        address _trustedOracle
+    ) external onlyOwner {
+        // Initialize the underlying token
+        initializeToken(_token);
 
         // Set MoneyPot specific parameters
-        token = _token;
         trustedOracle = _trustedOracle;
     }
-
-    /**
-     * @dev Authorize contract upgrades (only owner)
-     */
-    function _authorizeUpgrade(
-        address newImplementation
-    ) internal override onlyOwner {}
 
     function createPot(
         uint256 amount,
@@ -156,7 +130,10 @@ contract MoneyPot is
         });
 
         potIds.push(id);
-        token.safeTransferFrom(msg.sender, address(this), amount);
+        require(
+            this.transferFrom(msg.sender, address(this), amount),
+            "Transfer failed"
+        );
 
         emit PotCreated(id, msg.sender, block.timestamp);
         return id;
@@ -173,8 +150,14 @@ contract MoneyPot is
             100;
         uint256 platformShare = entryFee - creatorShare;
 
-        token.safeTransferFrom(msg.sender, pot.creator, creatorShare);
-        token.safeTransferFrom(msg.sender, address(this), platformShare);
+        require(
+            this.transferFrom(msg.sender, pot.creator, creatorShare),
+            "Transfer failed"
+        );
+        require(
+            this.transferFrom(msg.sender, address(this), platformShare),
+            "Transfer failed"
+        );
 
         pot.attemptsCount++;
 
@@ -216,7 +199,10 @@ contract MoneyPot is
             uint256 hunterShare = (pot.totalAmount * HUNTER_SHARE_PERCENT) /
                 100;
 
-            token.safeTransfer(attempt.hunter, hunterShare);
+            require(
+                this.transfer(attempt.hunter, hunterShare),
+                "Transfer failed"
+            );
             // Note: We can't burn tokens from the underlying contract, so we keep the platform share
             // In a real implementation, you might want to send it to a treasury or burn mechanism
 
@@ -233,14 +219,14 @@ contract MoneyPot is
         if (block.timestamp < pot.expiresAt) revert NotExpired();
 
         pot.isActive = false;
-        token.safeTransfer(pot.creator, pot.totalAmount);
+        require(this.transfer(pot.creator, pot.totalAmount), "Transfer failed");
 
         emit PotExpired(potId, pot.creator, block.timestamp);
     }
 
     // View functions
     function getBalance(address account) external view returns (uint256) {
-        return token.balanceOf(account);
+        return this.balanceOf(account);
     }
 
     function getPots() external view returns (uint256[] memory) {

@@ -30,7 +30,7 @@ contract MoneyPotToken is Ownable, ReentrancyGuard {
      * @dev Initialize the underlying token
      * @param _underlying The underlying ERC20 token to proxy
      */
-    function initializeToken(IERC20Metadata _underlying) external onlyOwner {
+    function initializeToken(IERC20Metadata _underlying) public onlyOwner {
         require(address(underlying) == address(0), "Already initialized");
         underlying = _underlying;
     }
