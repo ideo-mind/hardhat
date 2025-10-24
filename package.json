@@ -10,7 +10,7 @@
     "node": "hardhat node --network hardhat",
     "console": "hardhat console",
     "verify": "hardhat verify",
-    "start": "hardhat node",
+    "start": "hardhat node --network hardhat",
     "clean": "hardhat clean",
     "coverage": "hardhat coverage",
     "format": "biome format --write .",
