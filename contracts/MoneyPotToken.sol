@@ -1,59 +1,39 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
  * @title MoneyPotToken
- * @dev Proxy token contract that wraps any underlying ERC20 token
- * @notice This contract provides proxy functionality for any ERC20 token with upgradeable features
+ * @dev Simple proxy token contract that wraps any underlying ERC20 token
+ * @notice This contract provides proxy functionality for any ERC20 token
  *
  * Key Features:
  * - Proxy pattern for any underlying ERC20 token
  * - Safe transfer pattern using approve + transferFrom
  * - Reentrancy protection
- * - Upgradeable functionality
  * - Owner-controlled operations
  */
-contract MoneyPotToken is
-    Initializable,
-    OwnableUpgradeable,
-    ReentrancyGuardUpgradeable,
-    UUPSUpgradeable
-{
+contract MoneyPotToken is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20Metadata;
 
     // The underlying ERC20 token being proxied
-    IERC20Metadata public immutable underlying;
+    IERC20Metadata public underlying;
 
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor(IERC20Metadata _underlying) {
+    constructor() Ownable(msg.sender) {}
+
+    /**
+     * @dev Initialize the underlying token
+     * @param _underlying The underlying ERC20 token to proxy
+     */
+    function initializeToken(IERC20Metadata _underlying) external onlyOwner {
+        require(address(underlying) == address(0), "Already initialized");
         underlying = _underlying;
-        _disableInitializers();
     }
-
-    /**
-     * @dev Initialize the MoneyPotToken contract
-     * @param _initialOwner The initial owner of the contract
-     */
-    function initialize(address _initialOwner) external virtual initializer {
-        __Ownable_init(_initialOwner);
-        __ReentrancyGuard_init();
-        __UUPSUpgradeable_init();
-    }
-
-    /**
-     * @dev Authorize contract upgrades (only owner)
-     */
-    function _authorizeUpgrade(
-        address newImplementation
-    ) internal override onlyOwner {}
 
     // ============ PROXY FUNCTIONS ============
 
