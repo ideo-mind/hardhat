@@ -82,7 +82,7 @@ contract MoneyPot is MoneyPotToken {
     );
 
     // Errors
-    error InvalidFee();
+    error InvalidFee(uint256 minFee, uint256 fee);
     error PotNotActive();
     error ExpiredPot();
     error NotExpired();
@@ -113,7 +113,7 @@ contract MoneyPot is MoneyPotToken {
         uint256 fee,
         address oneFaAddress
     ) external nonReentrant returns (uint256) {
-        if (fee > amount || fee < MIN_FEE) revert InvalidFee();
+        if (fee > amount || fee < MIN_FEE) revert InvalidFee(MIN_FEE, fee);
 
         uint256 id = nextPotId++;
 
