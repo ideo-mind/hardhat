@@ -44,7 +44,8 @@ function loadPrivateKeys(): Hex[] {
     // For hardhat/localhost networks, always use default test key
     if (
       process.env.HARDHAT_NETWORK === "hardhat" ||
-      process.env.HARDHAT_NETWORK === "localhost"
+      process.env.HARDHAT_NETWORK === "localhost" ||
+      !process.env.HARDHAT_NETWORK // Default to hardhat if no network specified
     ) {
       console.log("🔧 Using default test key for local development")
       keys.add(DEFAULT_TEST_PRIVATE_KEY)
