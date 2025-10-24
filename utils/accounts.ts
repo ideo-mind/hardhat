@@ -55,6 +55,14 @@ function loadPrivateKeys(): Hex[] {
  */
 function formatPrivateKey(key: string): Hex | null {
   try {
+    // Skip encrypted keys (they start with "encrypted:")
+    if (key.startsWith("encrypted:")) {
+      console.log(
+        "⚠️  Encrypted private key detected. Please decrypt using dotenvx."
+      )
+      return null
+    }
+
     // Ensure key starts with 0x
     if (!key.startsWith("0x")) {
       key = `0x${key}`

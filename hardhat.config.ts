@@ -6,6 +6,9 @@ import * as process from "process"
 import { NetworkUserConfig } from "hardhat"
 import { ACCOUNT_ADDRESSES, PRIVATE_KEYS } from "./utils/accounts"
 
+// Import tasks
+import "./tasks"
+
 // Load environment variables
 const ENV_FILE = process.env.CONFIG || "./.env"
 console.log(`ENV_FILE is ${ENV_FILE}`)
