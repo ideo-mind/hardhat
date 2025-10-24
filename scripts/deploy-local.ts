@@ -13,8 +13,11 @@
  */
 
 import { execSync } from "child_process"
-import { ethers } from "hardhat"
+import hre from "hardhat"
 import { parseEther } from "ethers"
+
+// Ensure hardhat runtime environment is available
+const { ethers } = hre
 
 async function main() {
   console.log("🚀 Starting MoneyPot local deployment...")

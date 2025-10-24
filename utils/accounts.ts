@@ -41,15 +41,22 @@ function loadPrivateKeys(): Hex[] {
       process.env.HARDHAT_NETWORK &&
       !["hardhat", "localhost"].includes(process.env.HARDHAT_NETWORK)
 
-    if (isProduction || isTestnet) {
+    // For hardhat/localhost networks, always use default test key
+    if (
+      process.env.HARDHAT_NETWORK === "hardhat" ||
+      process.env.HARDHAT_NETWORK === "localhost"
+    ) {
+      console.log("🔧 Using default test key for local development")
+      keys.add(DEFAULT_TEST_PRIVATE_KEY)
+    } else if (isProduction || isTestnet) {
       throw new Error(
         "No private keys configured for production/testnet deployment!"
       )
+    } else {
+      console.log("⚠️  No private keys found. Using default test key.")
+      console.log("⚠️  DO NOT use this key in production!")
+      keys.add(DEFAULT_TEST_PRIVATE_KEY)
     }
-
-    console.log("⚠️  No private keys found. Using default test key.")
-    console.log("⚠️  DO NOT use this key in production!")
-    keys.add(DEFAULT_TEST_PRIVATE_KEY)
   }
 
   return Array.from(keys)
