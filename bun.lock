@@ -9,7 +9,7 @@
         "@openzeppelin/contracts-upgradeable": "^5.4.0",
         "dotenv": "^17.2.3",
         "ethereumjs-wallet": "^1.0.2",
-        "ethers": "^6.10.0",
+        "ethers": "^6.15.0",
         "ethers5": "npm:ethers@^5",
       },
       "devDependencies": {

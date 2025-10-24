@@ -1,8 +1,8 @@
 import { Address, getAddress, Hex } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
 import { ethers } from "ethers"
-import { HardhatRuntimeEnvironment } from "hardhat/types"
 import { Account } from "./types"
+import { HardhatRuntimeEnvironment } from "hardhat/types/hre"
 
 /**
  * Default test private key (from Hardhat's default first account)
