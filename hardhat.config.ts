@@ -2,6 +2,7 @@ import "@nomicfoundation/hardhat-ignition"
 import "@nomicfoundation/hardhat-toolbox-viem"
 
 import hardhatToolboxMochaEthersPlugin from "@nomicfoundation/hardhat-toolbox-mocha-ethers"
+import keystorePlugin from "@nomicfoundation/hardhat-keystore"
 
 import type { HardhatUserConfig } from "hardhat/config"
 import * as process from "process"
@@ -50,7 +51,7 @@ interface _Config extends HardhatUserConfig {
 }
 
 const config: _Config = {
-  plugins: [hardhatToolboxMochaEthersPlugin],
+  plugins: [hardhatToolboxMochaEthersPlugin, keystorePlugin],
   solidity: {
     version: "0.8.28",
     settings: {
@@ -92,8 +93,8 @@ const config: _Config = {
       url: ALCHEMY_KEY
         ? `https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_KEY}`
         : INFURA_KEY
-          ? `https://sepolia.infura.io/v3/${INFURA_KEY}`
-          : "https://rpc.sepolia.org",
+        ? `https://sepolia.infura.io/v3/${INFURA_KEY}`
+        : "https://rpc.sepolia.org",
       ws: INFURA_KEY
         ? `wss://sepolia.infura.io/ws/v3/${INFURA_KEY}`
         : undefined,
@@ -116,7 +117,10 @@ const config: _Config = {
     // Somnia Testnet network
     somnia: {
       type: "http",
-      url: `https://rpc.ankr.com/somnia_testnet/${process.env.ANKR_API_KEY || "b538dd90abf174d5a5e91e686b9a0d2bcb80c0531c5d99fe61aa7b2a9720d453"}`,
+      url: `https://rpc.ankr.com/somnia_testnet/${
+        process.env.ANKR_API_KEY ||
+        "b538dd90abf174d5a5e91e686b9a0d2bcb80c0531c5d99fe61aa7b2a9720d453"
+      }`,
       chainId: 50312,
       accounts: PRIVATE_KEYS,
       saveDeployments: true,
