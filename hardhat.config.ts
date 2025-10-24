@@ -1,42 +1,48 @@
-import "@nomicfoundation/hardhat-ignition-viem";
-import "@nomicfoundation/hardhat-toolbox-viem";
-import * as dotenv from "dotenv";
-import { HardhatUserConfig } from "hardhat/config";
-import * as process from "process";
+import "@nomicfoundation/hardhat-ignition-viem"
+import "@nomicfoundation/hardhat-toolbox-viem"
+import * as dotenv from "dotenv"
+import { HardhatUserConfig } from "hardhat/config"
+import * as process from "process"
 
 // Load environment variables
-const ENV_FILE = process.env.CONFIG || "./.env";
-console.log(`ENV_FILE is ${ENV_FILE}`);
-dotenv.config({ path: ENV_FILE });
+const ENV_FILE = process.env.CONFIG || "./.env"
+console.log(`ENV_FILE is ${ENV_FILE}`)
+dotenv.config({ path: ENV_FILE })
 
-import { NetworkUserConfig } from "hardhat/types";
-import { ACCOUNT_ADDRESSES, PRIVATE_KEYS } from "./utils/accounts";
+import { NetworkUserConfig } from "hardhat/types"
+import { ACCOUNT_ADDRESSES, PRIVATE_KEYS } from "./utils/accounts"
 
-let NETWORK = process.env.NETWORK || "hardhat";
-const INFURA_KEY = process.env.INFURA_KEY || "";
-const ALCHEMY_KEY = process.env.ALCHEMY_KEY || "";
+let NETWORK = process.env.NETWORK || "hardhat"
+const INFURA_KEY = process.env.INFURA_KEY || ""
+const ALCHEMY_KEY = process.env.ALCHEMY_KEY || ""
 
 type _Network = NetworkUserConfig & {
-  ws?: string;
-  faucet?: string | Array<string>;
-  explorer?: string;
-  confirmations?: number;
-  evmVersion?: string;
-};
+  ws?: string
+  faucet?: string | Array<string>
+  explorer?: string
+  confirmations?: number
+  evmVersion?: string
+  tokens?: {
+    [tokenName: string]: {
+      address: `0x${string}`
+      faucet?: Array<string>
+    }
+  }
+}
 
 const genesisAcc = [
   ...PRIVATE_KEYS.map((privateKey) => {
     return {
       privateKey: privateKey,
       balance: `${1000000000000000000000000n}`,
-    };
+    }
   }),
-];
+]
 
 interface _Config extends HardhatUserConfig {
   networks: {
-    [network: string]: _Network;
-  };
+    [network: string]: _Network
+  }
 }
 
 const config: _Config = {
@@ -91,27 +97,38 @@ const config: _Config = {
       saveDeployments: true,
       explorer: "https://sepolia.etherscan.io",
       confirmations: 2,
+      tokens: {
+        pyUSD: {
+          address: "0x6c3ea9036406852006290770bedfcaba0e23a0e8",
+          faucet: [
+            "https://cloud.google.com/application/web3/faucet/ethereum/sepolia/pyusd",
+            "https://faucet.paxos.com",
+          ],
+        },
+      },
     },
 
-    // Somnia network
+    // Somnia Testnet network
     somnia: {
       type: "http",
-      url: "https://dream-rpc.somnia.network",
-      chainId: 50311,
+      url: `https://rpc.ankr.com/somnia_testnet/${process.env.ANKR_API_KEY || "b538dd90abf174d5a5e91e686b9a0d2bcb80c0531c5d99fe61aa7b2a9720d453"}`,
+      chainId: 50312,
       accounts: PRIVATE_KEYS,
       saveDeployments: true,
-      explorer: "https://explorer.somnia.network",
+      explorer: "https://shannon-explorer.somnia.network",
       confirmations: 1,
     },
 
-    // Chiliz Chain
+    // CreditCoin testnet
     cc: {
       type: "http",
-      url: "https://rpc.ankr.com/chiliz",
-      chainId: 88888,
+      url: "https://rpc.cc3-testnet.creditcoin.network",
+      ws: "wss://rpc.cc3-testnet.creditcoin.network",
+      chainId: 102031,
       accounts: PRIVATE_KEYS,
       saveDeployments: true,
-      explorer: "https://scan.chiliz.com",
+      explorer: "https://creditcoin-testnet.blockscout.com",
+      faucet: ["<discord url>"],
       confirmations: 1,
     },
   },
@@ -132,12 +149,12 @@ const config: _Config = {
     requiredConfirmations: 1,
     disableFeeBumping: false,
   },
-};
+}
 
 // Log configuration info
-console.log(`🔧 Default Network: ${NETWORK}`);
-console.log(`🔑 Loaded ${PRIVATE_KEYS.length} account(s)`);
-if (INFURA_KEY) console.log(`📡 Using Infura API`);
-if (ALCHEMY_KEY) console.log(`⚗️ Using Alchemy API`);
+console.log(`🔧 Default Network: ${NETWORK}`)
+console.log(`🔑 Loaded ${PRIVATE_KEYS.length} account(s)`)
+if (INFURA_KEY) console.log(`📡 Using Infura API`)
+if (ALCHEMY_KEY) console.log(`⚗️ Using Alchemy API`)
 
-export default config;
+export default config
