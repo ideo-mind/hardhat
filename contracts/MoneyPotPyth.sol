@@ -3,14 +3,13 @@ pragma solidity ^0.8.28;
 
 import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @title MoneyPotPyth
  * @dev Simple Pyth integration for exchange rates
  * @notice Provides ETH/USD exchange rate functionality for MoneyPot
  */
-contract MoneyPotPyth is Ownable {
+contract MoneyPotPyth {
     // Pyth ETH/USD price feed ID (configurable)
     bytes32 public ethUsdPriceId;
 
@@ -18,21 +17,26 @@ contract MoneyPotPyth is Ownable {
     IPyth public pythInstance;
     bool public pythConfigured;
 
+    // Events
+    event PriceUpdated(
+        bytes32 indexed priceId,
+        int64 price,
+        uint64 publishTime
+    );
+
     // Errors
     error PythNotConfigured();
     error InvalidEthPrice();
+    error InsufficientFee(uint256 required, uint256 sent);
 
-    constructor() Ownable(msg.sender) {}
+    constructor() {}
 
     /**
      * @dev Initialize Pyth price feed
      * @param _pythInstance Address of the Pyth contract
      * @param _priceId Price feed ID for ETH/USD
      */
-    function initializePyth(
-        address _pythInstance,
-        bytes32 _priceId
-    ) external onlyOwner {
+    function initializePyth(address _pythInstance, bytes32 _priceId) external {
         if (_pythInstance != address(0)) {
             pythInstance = IPyth(_pythInstance);
             ethUsdPriceId = _priceId;
@@ -43,11 +47,52 @@ contract MoneyPotPyth is Ownable {
     }
 
     /**
+     * @dev Update price feeds and get latest price
+     * @param priceUpdateData Price update data from Pyth
+     * @param priceId Price feed ID to update
+     * @return price Latest price
+     * @return publishTime Price publish time
+     */
+    function updateAndGetPrice(
+        bytes[] calldata priceUpdateData,
+        bytes32 priceId
+    ) external payable returns (int64 price, uint64 publishTime) {
+        if (!pythConfigured) revert PythNotConfigured();
+
+        // Get the fee required to update prices
+        uint256 updateFee = pythInstance.getUpdateFee(priceUpdateData);
+        if (msg.value < updateFee) {
+            revert InsufficientFee(updateFee, msg.value);
+        }
+
+        // Update the price feeds with the provided data
+        pythInstance.updatePriceFeeds{value: updateFee}(priceUpdateData);
+
+        // Get the latest price
+        PythStructs.Price memory priceData = pythInstance.getPriceUnsafe(
+            priceId
+        );
+
+        emit PriceUpdated(
+            priceId,
+            priceData.price,
+            uint64(priceData.publishTime)
+        );
+
+        // Refund excess payment
+        if (msg.value > updateFee) {
+            payable(msg.sender).transfer(msg.value - updateFee);
+        }
+
+        return (priceData.price, uint64(priceData.publishTime));
+    }
+
+    /**
      * @dev Get ETH amount for given USD cents using stale exchange rate
      * @param usdCents Amount in USD cents (e.g., 10 for $0.10)
      * @return Required ETH amount in wei
      */
-    function getEthExchangeRate(
+    function getExchangeRateForUSD(
         uint256 usdCents
     ) internal view returns (uint256) {
         if (!pythConfigured) revert PythNotConfigured();
@@ -81,7 +126,7 @@ contract MoneyPotPyth is Ownable {
      * @dev Get current ETH/USD price from Pyth (stale)
      * @return Current ETH price in USD
      */
-    function getCurrentEthUsdPrice() external view returns (int64, int32) {
+    function getCurrentPriceInUsd() external view returns (int64, int32) {
         if (!pythConfigured) revert PythNotConfigured();
 
         PythStructs.Price memory price = pythInstance.getPriceUnsafe(

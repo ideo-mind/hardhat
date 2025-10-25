@@ -158,7 +158,7 @@ contract MoneyPot is MoneyPotToken, MoneyPotPyth {
             if (!pythConfigured) revert PythNotConfigured();
 
             // Get required ETH amount for entry fee using stale exchange rate
-            uint256 requiredEth = getEthExchangeRate(entryFee);
+            uint256 requiredEth = getExchangeRateForUSD(entryFee);
 
             if (msg.value < requiredEth) {
                 revert InsufficientEthPayment(requiredEth, msg.value);
