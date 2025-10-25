@@ -32,9 +32,6 @@ const MoneyPotModule = buildModule("MoneyPotModule", (m) => {
 
   let underlyingToken: ERC20
   let tokenDeployed = false
-  // Check if we have a valid token address
-  // Note: We'll check this at runtime since tokenAddress is a runtime parameter
-  const hasTokenAddress = tokenAddress
 
   let deployToken = false
 
@@ -42,8 +39,14 @@ const MoneyPotModule = buildModule("MoneyPotModule", (m) => {
   if (tokenAddress !== undefined) {
     try {
       underlyingToken = m.contractAt("IERC20", tokenAddress)
-      underlyingToken.waitForDeployment()
+      if (
+        process.env.NETWORK == "localhost" ||
+        process.env.NETWORK == "hardhat"
+      ) {
+        throw new Error("failing for token deployment")
+      }
     } catch (error) {
+      console.error(error)
       // If contract doesn't exist at address, deploy a new one
       console.error(
         `No valid contract found at token address ${tokenAddress}, deploying new token...`
