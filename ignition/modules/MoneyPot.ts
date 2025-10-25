@@ -38,20 +38,28 @@ const MoneyPotModule = buildModule("MoneyPotModule", (m) => {
   let deployToken = false
 
   // Try to use existing token contract - will fail if no contract exists at address
-  try {
-    underlyingToken = m.contractAt("IERC20", tokenAddress)
-  } catch (error) {
-    // If contract doesn't exist at address, deploy a new one
-    console.error(
-      `No valid contract found at token address ${tokenAddress}, deploying new token...`
-    )
+  if (
+    tokenAddress &&
+    tokenAddress !== "0x0000000000000000000000000000000000000000" &&
+    tokenAddress !== ""
+  ) {
+    try {
+      underlyingToken = m.contractAt("IERC20", tokenAddress)
+    } catch (error) {
+      // If contract doesn't exist at address, deploy a new one
+      console.error(
+        `No valid contract found at token address ${tokenAddress}, deploying new token...`
+      )
 
+      deployToken = true
+    }
+  } else {
+    // No token address provided or zero address, deploy a new one
+    console.log("No token address provided, deploying new token...")
     deployToken = true
   }
 
   if (deployToken) {
-    console.log("No token address provided, deploying new token...")
-
     underlyingToken = m.contract("ERC20", [
       "MoneyPot Token",
       "MPT",
