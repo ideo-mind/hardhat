@@ -1,11 +1,9 @@
 {
   "MoneyPotModule": {
     "verifier": "0xBAf5a46a2153207ff97993AC5c94179d2956ddF8",
-    "token": "0x6c3ea9036406852006290770bedfcaba0e23a0e8"
-  },
-  "MoneyPotPythModule": {
+    "token": "0x6c3ea9036406852006290770bedfcaba0e23a0e8",
     "moneyPotAddress": "0x0000000000000000000000000000000000000000",
-    "pythInstance": "0x0000000000000000000000000000000000000000",
+    "pythInstance": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
     "priceId": "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"
   }
 }
