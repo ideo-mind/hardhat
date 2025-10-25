@@ -4,6 +4,7 @@ import "@nomicfoundation/hardhat-toolbox-viem"
 import hardhatToolboxMochaEthersPlugin from "@nomicfoundation/hardhat-toolbox-mocha-ethers"
 import keystorePlugin from "@nomicfoundation/hardhat-keystore"
 import hardhatVerify from "@nomicfoundation/hardhat-verify"
+import hardhatTypechain from "@nomicfoundation/hardhat-typechain"
 
 import type { HardhatUserConfig } from "hardhat/config"
 import * as process from "process"
@@ -52,7 +53,12 @@ interface _Config extends HardhatUserConfig {
 }
 
 const config: _Config = {
-  plugins: [hardhatToolboxMochaEthersPlugin, keystorePlugin, hardhatVerify],
+  plugins: [
+    hardhatToolboxMochaEthersPlugin,
+    keystorePlugin,
+    hardhatVerify,
+    hardhatTypechain,
+  ],
   solidity: {
     version: "0.8.28",
     npmFilesToBuild: [
@@ -237,3 +243,5 @@ const config: _Config = {
 }
 
 export default config
+
+// https://hardhat.org/plugins
