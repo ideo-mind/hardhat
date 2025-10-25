@@ -1,10 +1,17 @@
 import hre from "hardhat"
 import { getAccount } from "../utils/accounts"
 import MoneyPotModule from "../ignition/modules/MoneyPot"
+import fs from "fs"
+import path from "path"
+import { fileURLToPath } from "url"
 
 import { MoneyPot } from "../typechain-types/contracts/MoneyPot"
 import { MoneyPotToken } from "../typechain-types/contracts/MoneyPotToken"
 import { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types"
+
+// ES module equivalent of __dirname
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 /**
  * MoneyPot Flow Test Script
  *
@@ -61,19 +68,81 @@ async function main() {
   let moneyPot: MoneyPot
   let underlyingToken: MoneyPotToken
 
-  const ignitionDeployment = await connection.ignition.deploy(MoneyPotModule, {
-    parameters: {
+  // Load network-specific parameters
+  const networkName = hre.network.name || "cc" // Fallback to cc for now
+  const paramsPath = path.join(
+    __dirname,
+    "..",
+    "ignition",
+    "parameters",
+    `${networkName}.json`
+  )
+
+  let parameters = {}
+  if (fs.existsSync(paramsPath)) {
+    const paramsData = fs.readFileSync(paramsPath, "utf8")
+    parameters = JSON.parse(paramsData)
+    console.log(`📋 Loaded parameters for network: ${networkName}`)
+  } else {
+    console.log(`⚠️ No parameter file found for network: ${networkName}`)
+    console.log(`   Using default parameters...`)
+    // Fallback to basic parameters
+    parameters = {
       MoneyPotModule: {
         verifier: verifier.address,
-        token: "0x6c3ea9036406852006290770bedfcaba0e23a0e8", // Use existing token address
+        token: "",
         pythInstance: "0x0000000000000000000000000000000000000000",
-        priceId:
-          "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
+        priceId: "0x0000000000000000000000000000000000000000",
       },
-    },
-  })
-  moneyPot = ignitionDeployment.moneyPot
-  underlyingToken = ignitionDeployment.underlyingToken
+    }
+  }
+
+  // Connect directly to deployed contracts to avoid reconciliation errors
+  console.log("🔗 Connecting to deployed contracts...")
+
+  // Read deployed addresses
+  const chainId = (await ethers.provider.getNetwork()).chainId
+  const deployedAddressesPath = path.join(
+    __dirname,
+    "..",
+    "ignition",
+    "deployments",
+    `chain-${chainId}`,
+    "deployed_addresses.json"
+  )
+  let deployedAddresses = {}
+
+  if (fs.existsSync(deployedAddressesPath)) {
+    const addressesData = fs.readFileSync(deployedAddressesPath, "utf8")
+    deployedAddresses = JSON.parse(addressesData)
+    console.log("📋 Loaded deployed addresses:", deployedAddresses)
+  } else {
+    throw new Error(`No deployed addresses found for chain ${chainId}`)
+  }
+
+  // Connect to deployed contracts
+  const moneyPotAddress = deployedAddresses["MoneyPotModule#MoneyPot"]
+  const tokenAddress = deployedAddresses["MoneyPotModule#IERC20"]
+
+  if (!moneyPotAddress || !tokenAddress) {
+    throw new Error(
+      "Required contract addresses not found in deployed addresses"
+    )
+  }
+
+  console.log(`💰 MoneyPot Contract: ${moneyPotAddress}`)
+  console.log(`🪙 Token Contract: ${tokenAddress}`)
+
+  // Connect to contracts
+  moneyPot = await connectContractAddress<MoneyPot>(
+    ethers,
+    "MoneyPot",
+    moneyPotAddress
+  )
+  underlyingToken = (await ethers.getContractAt(
+    "IERC20",
+    tokenAddress
+  )) as MoneyPotToken
 
   // console.log({ moneyPotAddress, underlyingTokenAddress })
 
