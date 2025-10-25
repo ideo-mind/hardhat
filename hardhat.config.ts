@@ -219,7 +219,7 @@ const config: _Config = {
   },
   // TypeChain configuration
   typechain: {
-    outDir: "types",
+    outDir: "typechain-types",
     target: "ethers-v6",
     alwaysGenerateOverloads: false,
     dontOverrideCompile: false,
