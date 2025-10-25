@@ -134,4 +134,8 @@ contract MoneyPotToken is Ownable, ReentrancyGuard {
     function decimals() external view returns (uint8) {
         return underlying.decimals();
     }
+
+    function getTokenAddress() external view returns (address) {
+        return address(underlying);
+    }
 }

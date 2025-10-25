@@ -13,5 +13,9 @@ start *ARGS:
   bun start {{ARGS}}
 
 
-deploy network=NETWORK:
-  bun hardhat ignition deploy ignition/modules/MoneyPot.ts --network {{network}} --parameters ignition/parameters/{{network}}.json
+deploy network=NETWORK *ARGS="":
+  NETWORK={{network}} bun hardhat ignition deploy ignition/modules/MoneyPot.ts --reset --network {{network}} --parameters ignition/parameters/{{network}}.json {{ARGS}}
+
+
+hardhat *ARGS:
+  bun hardhat {{ARGS}}

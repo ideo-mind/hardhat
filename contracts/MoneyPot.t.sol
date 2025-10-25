@@ -36,9 +36,9 @@ contract MoneyPotTest is Test {
         vm.prank(owner);
         moneyPot = new MoneyPot();
 
-        // Initialize MoneyPot with mock token and verifier (no Pyth for tests)
+        // Initialize MoneyPot with mock token and verifier
         vm.prank(owner);
-        moneyPot.initialize(mockToken, verifier, address(0));
+        moneyPot.initialize(mockToken, verifier);
 
         // Give creator some tokens and approve MoneyPot to spend them
         vm.prank(owner);
@@ -105,7 +105,7 @@ contract MoneyPotTest is Test {
 
         // Now attempt the pot with hunter
         vm.prank(hunter);
-        uint256 attemptId = moneyPot.attemptPot(potId, new bytes[](0));
+        uint256 attemptId = moneyPot.attemptPot(potId);
 
         // Verify attempt was created correctly
         assertEq(attemptId, 0, "First attempt should have ID 0");
@@ -155,7 +155,7 @@ contract MoneyPotTest is Test {
         );
 
         vm.prank(hunter);
-        uint256 attemptId = moneyPot.attemptPot(potId, new bytes[](0));
+        uint256 attemptId = moneyPot.attemptPot(potId);
 
         // Mark attempt as failed by verifier
         vm.prank(verifier);
@@ -188,7 +188,7 @@ contract MoneyPotTest is Test {
         );
 
         vm.prank(hunter);
-        uint256 attemptId = moneyPot.attemptPot(potId, new bytes[](0));
+        uint256 attemptId = moneyPot.attemptPot(potId);
 
         // Mark attempt as successful by verifier
         vm.prank(verifier);
@@ -202,12 +202,13 @@ contract MoneyPotTest is Test {
         MoneyPot.MoneyPotData memory pot = moneyPot.getPot(potId);
         assertEq(pot.isActive, false, "Pot should no longer be active");
 
-        // Verify hunter received 60% of the pot amount
-        uint256 hunterShare = (POT_AMOUNT * 60) / 100;
+        // Verify hunter received % of the pot amount
+        uint256 hunterShare = (POT_AMOUNT * moneyPot.HUNTER_SHARE_PERCENT()) /
+            100;
         assertEq(
             mockToken.balanceOf(hunter),
             (POT_FEE * 9) + hunterShare,
-            "Hunter should receive 60% of pot"
+            "Hunter should receive % of pot"
         );
 
         // Verify MoneyPot still holds the remaining 40% (platform share)
@@ -233,7 +234,7 @@ contract MoneyPotTest is Test {
 
         // First attempt - difficulty should be 3
         vm.prank(hunter);
-        uint256 attemptId1 = moneyPot.attemptPot(potId, new bytes[](0));
+        uint256 attemptId1 = moneyPot.attemptPot(potId);
 
         MoneyPot.Attempt memory attempt1 = moneyPot.getAttempt(attemptId1);
         assertEq(
@@ -248,7 +249,7 @@ contract MoneyPotTest is Test {
 
         // Second attempt - difficulty should be 4
         vm.prank(hunter);
-        uint256 attemptId2 = moneyPot.attemptPot(potId, new bytes[](0));
+        uint256 attemptId2 = moneyPot.attemptPot(potId);
 
         MoneyPot.Attempt memory attempt2 = moneyPot.getAttempt(attemptId2);
         assertEq(
@@ -273,7 +274,7 @@ contract MoneyPotTest is Test {
         );
 
         vm.prank(hunter);
-        uint256 attemptId = moneyPot.attemptPot(potId, new bytes[](0));
+        uint256 attemptId = moneyPot.attemptPot(potId);
 
         // Try to mark attempt as completed by non-verifier (should fail)
         vm.prank(hunter);
@@ -331,7 +332,7 @@ contract MoneyPotTest is Test {
         // Try to attempt expired pot (should fail)
         vm.prank(hunter);
         vm.expectRevert(MoneyPot.ExpiredPot.selector);
-        moneyPot.attemptPot(potId, new bytes[](0));
+        moneyPot.attemptPot(potId);
     }
 
     function test_CannotAttemptInactivePot() public {
@@ -346,7 +347,7 @@ contract MoneyPotTest is Test {
 
         // Attempt and solve the pot
         vm.prank(hunter);
-        uint256 attemptId = moneyPot.attemptPot(potId, new bytes[](0));
+        uint256 attemptId = moneyPot.attemptPot(potId);
 
         vm.prank(verifier);
         moneyPot.attemptCompleted(attemptId, true);
@@ -354,7 +355,7 @@ contract MoneyPotTest is Test {
         // Try to attempt inactive pot (should fail)
         vm.prank(hunter);
         vm.expectRevert(MoneyPot.PotNotActive.selector);
-        moneyPot.attemptPot(potId, new bytes[](0));
+        moneyPot.attemptPot(potId);
     }
 
     function test_InvalidFee() public {
@@ -380,13 +381,13 @@ contract MoneyPotTest is Test {
             abi.encodeWithSelector(
                 MoneyPot.InvalidFee.selector,
                 moneyPot.MIN_FEE(),
-                1
+                0
             )
         );
         moneyPot.createPot(
             POT_AMOUNT,
             POT_DURATION,
-            1, // Fee less than minimum
+            0, // Fee less than minimum
             ONE_FA_ADDRESS
         );
     }

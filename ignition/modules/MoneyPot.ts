@@ -1,4 +1,8 @@
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules"
+import { Contract } from "ethers5"
+import { MoneyPot } from "typechain-types/contracts/MoneyPot"
+import { MoneyPotToken } from "typechain-types/contracts/MoneyPotToken"
+import { MockERC20 as ERC20 } from "typechain-types/contracts/MockERC20"
 import { parseEther } from "viem"
 
 /**
@@ -26,62 +30,44 @@ const MoneyPotModule = buildModule("MoneyPotModule", (m) => {
     throw new Error("Verifier address is required but not provided")
   }
 
-  let underlyingToken: any
-  let tokenDeployed = false
-  let tokenName = "Existing Token"
-  let tokenSymbol = "EXT"
+  let underlyingToken: ERC20
 
-  // Check if we have a valid token address
-  // Note: We'll check this at runtime since tokenAddress is a runtime parameter
-  const hasTokenAddress = tokenAddress
+  let deployToken = false
 
-  if (hasTokenAddress) {
-    // Try to use existing token contract - will fail if no contract exists at address
+  // Try to use existing token contract - will fail if no contract exists at address
+  if (tokenAddress !== undefined) {
     try {
       underlyingToken = m.contractAt("IERC20", tokenAddress)
-      tokenName = "Existing Token"
-      tokenSymbol = "EXT"
+      if (
+        process.env.NETWORK == "localhost" ||
+        process.env.NETWORK == "hardhat"
+      ) {
+        throw new Error("failing for token deployment")
+      }
+
+      underlyingToken = tokenAddress
     } catch (error) {
+      console.error(error)
       // If contract doesn't exist at address, deploy a new one
-      console.log(
+      console.error(
         `No valid contract found at token address ${tokenAddress}, deploying new token...`
       )
 
-      const tokenNameParam = m.getParameter("tokenName", "Deployed Token")
-      const tokenSymbolParam = m.getParameter("tokenSymbol", "DTOKEN")
-      const tokenDecimals = m.getParameter("tokenDecimals", 18)
-      const initialSupply = m.getParameter(
-        "initialSupply",
-        parseEther("1000000")
-      ) // 1M tokens
-
-      underlyingToken = m.contract("ERC20", [
-        tokenNameParam,
-        tokenSymbolParam,
-        tokenDecimals,
-        initialSupply,
-      ])
-      tokenDeployed = true
-      tokenName = "MoneyPot Token"
-      tokenSymbol = "MPT"
+      deployToken = true
     }
   } else {
+    // No token address provided or zero address, deploy a new one
     console.log("No token address provided, deploying new token...")
-    // Deploy new token contract
-    const tokenNameParam = m.getParameter("tokenName", "Deployed Token")
-    const tokenSymbolParam = m.getParameter("tokenSymbol", "DTOKEN")
-    const tokenDecimals = m.getParameter("tokenDecimals", 18)
-    const initialSupply = m.getParameter("initialSupply", parseEther("1000000")) // 1M tokens
+    deployToken = true
+  }
 
-    underlyingToken = m.contract("ERC20", [
-      tokenNameParam,
-      tokenSymbolParam,
-      tokenDecimals,
-      initialSupply,
+  if (deployToken) {
+    underlyingToken = m.contract("MockERC20", [
+      "MoneyPot Token",
+      "MPT",
+      18,
+      parseEther("1000000"),
     ])
-    tokenDeployed = true
-    tokenName = "Deployed Token"
-    tokenSymbol = "DTOKEN"
   }
 
   // Deploy the MoneyPot contract
@@ -90,6 +76,21 @@ const MoneyPotModule = buildModule("MoneyPotModule", (m) => {
   // Initialize MoneyPot with the token and verifier
   m.call(moneyPot, "initialize", [underlyingToken, verifier], {
     id: "initialize_money_pot",
+    after: [moneyPot],
+  })
+
+  // Initialize Pyth if parameters are provided
+  const pythInstanceAddress = m.getParameter(
+    "pythInstance",
+    "0x0000000000000000000000000000000000000000"
+  )
+  const priceId = m.getParameter(
+    "priceId",
+    "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"
+  )
+
+  m.call(moneyPot, "initializePyth", [pythInstanceAddress, priceId], {
+    id: "initialize_pyth",
     after: [moneyPot],
   })
 
@@ -104,6 +105,6 @@ export default MoneyPotModule
 
 // Export types for use in tests and scripts
 export type MoneyPotDeployment = {
-  moneyPot: any
-  underlyingToken: any
+  moneyPot: MoneyPot
+  underlyingToken: MoneyPotToken
 }
