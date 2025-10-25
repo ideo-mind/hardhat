@@ -26,7 +26,6 @@ contract MoneyPot is MoneyPotToken {
     uint256 public constant CREATOR_ENTRY_FEE_SHARE_PERCENT = 50;
     uint256 public constant MIN_FEE = 100 gwei;
     uint256 public constant ENTRY_FEE_USD_CENTS = 10; // $0.10 in cents
-    uint256 public constant USD_CENTS_DECIMALS = 2;
 
     // Pyth ETH/USD price feed ID (mainnet)
     bytes32 public constant ETH_USD_PRICE_ID =
@@ -102,9 +101,9 @@ contract MoneyPot is MoneyPotToken {
     error AttemptExpired();
     error AttemptCompleted();
     error Unauthorized();
+    error PythNotConfigured();
     error InsufficientEthPayment(uint256 required, uint256 sent);
     error InvalidEthPrice();
-    error PythNotConfigured();
 
     constructor() {}
 
@@ -112,7 +111,7 @@ contract MoneyPot is MoneyPotToken {
      * @dev Initialize the MoneyPot contract
      * @param _token Address of the ERC20 token to use
      * @param _verifier Address of the verifier
-     * @param _pythInstance Address of the Pyth price feed contract (optional)
+     * @param _pythInstance Address of the Pyth contract (optional)
      */
     function initialize(
         IERC20Metadata _token,
@@ -124,9 +123,23 @@ contract MoneyPot is MoneyPotToken {
 
         verifier = _verifier;
 
+        // Configure Pyth if provided
         if (_pythInstance != address(0)) {
             pythInstance = IPyth(_pythInstance);
             pythConfigured = true;
+        }
+    }
+
+    /**
+     * @dev Initialize Pyth separately
+     * @param _pythInstance Address of the Pyth contract
+     */
+    function initPyth(address _pythInstance) external onlyOwner {
+        if (_pythInstance != address(0)) {
+            pythInstance = IPyth(_pythInstance);
+            pythConfigured = true;
+        } else {
+            pythConfigured = false;
         }
     }
 
@@ -296,7 +309,7 @@ contract MoneyPot is MoneyPotToken {
         // Convert USD cents to USD (multiply by 10^2 for cents to dollars)
         // Then convert to wei (multiply by 10^18)
         // Then divide by ETH price (which is already scaled by 10^ethPrice.expo)
-        uint256 usdAmount = usdCents * 10 ** (18 - USD_CENTS_DECIMALS);
+        uint256 usdAmount = usdCents * 10 ** (18 - 2);
 
         // Handle price scaling: Pyth prices are scaled by 10^expo
         uint256 scaledPrice;
@@ -369,19 +382,6 @@ contract MoneyPot is MoneyPotToken {
     function updateVerifier(address _verifier) external onlyOwner {
         require(_verifier != address(0), "Invalid verifier");
         verifier = _verifier;
-    }
-
-    /**
-     * @dev Configure Pyth price feed instance (only owner)
-     * @param _pythInstance Address of the Pyth contract
-     */
-    function configurePyth(address _pythInstance) external onlyOwner {
-        if (_pythInstance != address(0)) {
-            pythInstance = IPyth(_pythInstance);
-            pythConfigured = true;
-        } else {
-            pythConfigured = false;
-        }
     }
 
     /**
