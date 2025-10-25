@@ -4,6 +4,7 @@
     "": {
       "name": "hardhat",
       "dependencies": {
+        "@nomicfoundation/hardhat-ethers": "^4.0.2",
         "@nomicfoundation/hardhat-verify": "^3.0.4",
         "@openzeppelin/contracts": "^5.4.0",
         "@openzeppelin/contracts-upgradeable": "^5.4.0",
