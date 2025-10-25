@@ -58,20 +58,22 @@ async function main() {
   // Deploy or connect to MoneyPot contracts via Ignition
   console.log("🔧 Deploying/Connecting to MoneyPot contracts...")
 
-  const { moneyPot, underlyingToken } = await connection.ignition.deploy(
-    MoneyPotModule,
-    {
-      parameters: {
-        MoneyPotModule: {
-          verifier: verifier.address,
-          token: "0x6c3ea9036406852006290770bedfcaba0e23a0e8", // Use existing token address
-          pythInstance: "0x0000000000000000000000000000000000000000",
-          priceId:
-            "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
-        },
+  let moneyPot: MoneyPot
+  let underlyingToken: MoneyPotToken
+
+  const ignitionDeployment = await connection.ignition.deploy(MoneyPotModule, {
+    parameters: {
+      MoneyPotModule: {
+        verifier: verifier.address,
+        token: "0x6c3ea9036406852006290770bedfcaba0e23a0e8", // Use existing token address
+        pythInstance: "0x0000000000000000000000000000000000000000",
+        priceId:
+          "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
       },
-    }
-  )
+    },
+  })
+  moneyPot = ignitionDeployment.moneyPot
+  underlyingToken = ignitionDeployment.underlyingToken
 
   // console.log({ moneyPotAddress, underlyingTokenAddress })
 

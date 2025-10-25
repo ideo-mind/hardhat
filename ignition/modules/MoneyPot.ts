@@ -1,4 +1,6 @@
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules"
+import { MoneyPot } from "typechain-types/contracts/MoneyPot"
+import { MoneyPotToken } from "typechain-types/contracts/MoneyPotToken"
 import { parseEther } from "viem"
 
 /**
@@ -26,7 +28,7 @@ const MoneyPotModule = buildModule("MoneyPotModule", (m) => {
     throw new Error("Verifier address is required but not provided")
   }
 
-  let underlyingToken: any
+  let underlyingToken: MoneyPotToken
   let tokenDeployed = false
   let tokenName = "Existing Token"
   let tokenSymbol = "EXT"
@@ -104,6 +106,6 @@ export default MoneyPotModule
 
 // Export types for use in tests and scripts
 export type MoneyPotDeployment = {
-  moneyPot: any
-  underlyingToken: any
+  moneyPot: MoneyPot
+  underlyingToken: MoneyPotToken
 }
