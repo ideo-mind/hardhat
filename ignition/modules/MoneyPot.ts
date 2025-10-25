@@ -31,7 +31,6 @@ const MoneyPotModule = buildModule("MoneyPotModule", (m) => {
   }
 
   let underlyingToken: ERC20
-  let tokenDeployed = false
 
   let deployToken = false
 
@@ -45,6 +44,8 @@ const MoneyPotModule = buildModule("MoneyPotModule", (m) => {
       ) {
         throw new Error("failing for token deployment")
       }
+
+      underlyingToken = tokenAddress
     } catch (error) {
       console.error(error)
       // If contract doesn't exist at address, deploy a new one
@@ -67,7 +68,6 @@ const MoneyPotModule = buildModule("MoneyPotModule", (m) => {
       18,
       parseEther("1000000"),
     ])
-    tokenDeployed = true
   }
 
   // Deploy the MoneyPot contract
