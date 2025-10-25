@@ -1,6 +1,8 @@
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules"
+import { Contract } from "ethers5"
 import { MoneyPot } from "typechain-types/contracts/MoneyPot"
 import { MoneyPotToken } from "typechain-types/contracts/MoneyPotToken"
+import { MockERC20 as ERC20 } from "typechain-types/contracts/MockERC20"
 import { parseEther } from "viem"
 
 /**
@@ -28,11 +30,8 @@ const MoneyPotModule = buildModule("MoneyPotModule", (m) => {
     throw new Error("Verifier address is required but not provided")
   }
 
-  let underlyingToken: MoneyPotToken
+  let underlyingToken: ERC20
   let tokenDeployed = false
-  let tokenName = "Existing Token"
-  let tokenSymbol = "EXT"
-
   // Check if we have a valid token address
   // Note: We'll check this at runtime since tokenAddress is a runtime parameter
   const hasTokenAddress = tokenAddress
@@ -40,11 +39,7 @@ const MoneyPotModule = buildModule("MoneyPotModule", (m) => {
   let deployToken = false
 
   // Try to use existing token contract - will fail if no contract exists at address
-  if (
-    tokenAddress &&
-    tokenAddress !== "0x0000000000000000000000000000000000000000" &&
-    tokenAddress !== ""
-  ) {
+  if (tokenAddress !== undefined) {
     try {
       underlyingToken = m.contractAt("IERC20", tokenAddress)
     } catch (error) {
@@ -81,19 +76,19 @@ const MoneyPotModule = buildModule("MoneyPotModule", (m) => {
   })
 
   // Initialize Pyth if parameters are provided
-  const pythInstance = m.getParameter("pythInstance", "")
-  const priceId = m.getParameter("priceId", "")
+  const pythInstanceAddress = m.getParameter(
+    "pythInstance",
+    "0x0000000000000000000000000000000000000000"
+  )
+  const priceId = m.getParameter(
+    "priceId",
+    "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"
+  )
 
-  if (pythInstance && priceId) {
-    m.call(moneyPot, "initializePyth", [pythInstance, priceId], {
-      id: "initialize_pyth",
-      after: [moneyPot],
-    })
-  } else {
-    console.log(
-      "No Pyth instance or price ID provided, skipping Pyth initialization"
-    )
-  }
+  m.call(moneyPot, "initializePyth", [pythInstanceAddress, priceId], {
+    id: "initialize_pyth",
+    after: [moneyPot],
+  })
 
   // Return the deployed contracts
   return {
