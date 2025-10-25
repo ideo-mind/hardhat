@@ -202,12 +202,13 @@ contract MoneyPotTest is Test {
         MoneyPot.MoneyPotData memory pot = moneyPot.getPot(potId);
         assertEq(pot.isActive, false, "Pot should no longer be active");
 
-        // Verify hunter received 60% of the pot amount
-        uint256 hunterShare = (POT_AMOUNT * 60) / 100;
+        // Verify hunter received % of the pot amount
+        uint256 hunterShare = (POT_AMOUNT * moneyPot.HUNTER_SHARE_PERCENT()) /
+            100;
         assertEq(
             mockToken.balanceOf(hunter),
             (POT_FEE * 9) + hunterShare,
-            "Hunter should receive 60% of pot"
+            "Hunter should receive % of pot"
         );
 
         // Verify MoneyPot still holds the remaining 40% (platform share)
@@ -380,13 +381,13 @@ contract MoneyPotTest is Test {
             abi.encodeWithSelector(
                 MoneyPot.InvalidFee.selector,
                 moneyPot.MIN_FEE(),
-                1
+                0
             )
         );
         moneyPot.createPot(
             POT_AMOUNT,
             POT_DURATION,
-            1, // Fee less than minimum
+            0, // Fee less than minimum
             ONE_FA_ADDRESS
         );
     }
