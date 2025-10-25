@@ -7,6 +7,7 @@
         "@nomicfoundation/hardhat-verify": "^3.0.4",
         "@openzeppelin/contracts": "^5.4.0",
         "@openzeppelin/contracts-upgradeable": "^5.4.0",
+        "@pythnetwork/pyth-sdk-solidity": "^4.2.0",
         "dotenv": "^17.2.3",
         "ethereumjs-wallet": "^1.0.2",
         "ethers": "^6.15.0",
@@ -273,6 +274,8 @@
     "@openzeppelin/contracts-upgradeable": ["@openzeppelin/contracts-upgradeable@5.4.0", "", { "peerDependencies": { "@openzeppelin/contracts": "5.4.0" } }, "sha512-STJKyDzUcYuB35Zub1JpWW58JxvrFFVgQ+Ykdr8A9PGXgtq/obF5uoh07k2XmFyPxfnZdPdBdhkJ/n2YxJ87HQ=="],
 
     "@pkgjs/parseargs": ["@pkgjs/parseargs@0.11.0", "", {}, "sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg=="],
+
+    "@pythnetwork/pyth-sdk-solidity": ["@pythnetwork/pyth-sdk-solidity@4.2.0", "", {}, "sha512-IO4pRqloqEXdbWqFbiNqthpaA5Dktl+t5GXckwdReEti90H4zcgxvINFLrSfRp7ylN2cP/LVgoCRHGEJGYlwKg=="],
 
     "@scure/base": ["@scure/base@1.2.6", "", {}, "sha512-g/nm5FgUa//MCj1gV09zTJTaM6KBAHqLN907YVQqf7zC49+DcO4B1so4ZX07Ef10Twr6nuqYEH9GEggFXA4Fmg=="],
 

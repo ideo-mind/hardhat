@@ -63,21 +63,30 @@ console.log("")
 
 // Mint tokens to admin and approve MoneyPot
 console.log("🪙 Minting tokens and setting approvals...")
-const mintTx = await Token.connect(adminSigner).mint(
-  adminAccount.address,
-  POT_AMOUNT * 2n
-)
-await mintTx.wait()
-console.log(`✅ Minted ${ethers.formatEther(POT_AMOUNT * 2n)} tokens to admin`)
+try {
+  const mintTx = await Token.connect(adminSigner).mint(
+    adminAccount.address,
+    POT_AMOUNT * 2n
+  )
+  await mintTx.wait()
+  console.log(
+    `✅ Minted ${ethers.formatEther(POT_AMOUNT * 2n)} tokens to admin`
+  )
 
-const approveTx = await Token.connect(adminSigner).approve(
-  MONEYPOT_ADDRESS,
-  POT_AMOUNT * 2n
-)
-await approveTx.wait()
-console.log(
-  `✅ Approved MoneyPot to spend ${ethers.formatEther(POT_AMOUNT * 2n)} tokens`
-)
+  const approveTx = await Token.connect(adminSigner).approve(
+    MONEYPOT_ADDRESS,
+    POT_AMOUNT * 2n
+  )
+  await approveTx.wait()
+  console.log(
+    `✅ Approved MoneyPot to spend ${ethers.formatEther(
+      POT_AMOUNT * 2n
+    )} tokens`
+  )
+} catch (error) {
+  console.log(`❌ Error with token operations: ${error.message}`)
+  throw error
+}
 console.log("")
 
 // Generate random 1FA address
@@ -100,7 +109,7 @@ try {
   console.log(`✅ Pot created with ID: ${potId}`)
 } catch (error) {
   console.log(`❌ Error creating pot: ${error.message}`)
-  process.exit(1)
+  throw error
 }
 
 console.log(`📊 Pot created successfully!`)
@@ -120,7 +129,7 @@ try {
   console.log(`✅ First attempt created with ID: ${attempt1Id}`)
 } catch (error) {
   console.log(`❌ Error creating first attempt: ${error.message}`)
-  process.exit(1)
+  throw error
 }
 
 console.log(`📊 First attempt details:`)
@@ -140,7 +149,7 @@ try {
   console.log(`✅ First attempt marked as failed`)
 } catch (error) {
   console.log(`❌ Error marking first attempt as failed: ${error.message}`)
-  process.exit(1)
+  throw error
 }
 
 console.log("")
@@ -154,7 +163,7 @@ try {
   console.log(`✅ Second attempt created with ID: ${attempt2Id}`)
 } catch (error) {
   console.log(`❌ Error creating second attempt: ${error.message}`)
-  process.exit(1)
+  throw error
 }
 
 console.log(`📊 Second attempt details:`)
@@ -174,7 +183,7 @@ try {
   console.log(`✅ Second attempt marked as successful`)
 } catch (error) {
   console.log(`❌ Error marking second attempt as successful: ${error.message}`)
-  process.exit(1)
+  throw error
 }
 
 // Step 4: Summary
@@ -213,7 +222,7 @@ console.log("")
 console.log("🎉 MoneyPot Flow Test Completed Successfully!")
 console.log("")
 console.log("📝 Note: This script demonstrates the complete MoneyPot flow:")
-console.log("   1. ✅ Pot creation with USDC deposit")
+console.log("   1. ✅ Pot creation with token deposit")
 console.log("   2. ✅ First attempt (failed by verifier)")
 console.log("   3. ✅ Second attempt (succeeded by verifier)")
 console.log("   4. ✅ Automatic payout to hunter (60%) and platform (40%)")
