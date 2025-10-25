@@ -23,3 +23,7 @@
 /typechain-types
 
 ignition/deployments/chain-31337
+ignition/deployments
+
+!ignition/deployments/chain-*/deployed_addresses.json
+!ignition/deployments/chain-*/journal.jsonl
