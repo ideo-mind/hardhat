@@ -2,6 +2,9 @@ import hre from "hardhat"
 import { getAccount } from "../utils/accounts"
 import MoneyPotModule from "../ignition/modules/MoneyPot"
 
+import { MoneyPot } from "../typechain-types/contracts/MoneyPot"
+import { MoneyPotToken } from "../typechain-types/contracts/MoneyPotToken"
+import { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types"
 /**
  * MoneyPot Flow Test Script
  *
@@ -26,6 +29,16 @@ import MoneyPotModule from "../ignition/modules/MoneyPot"
  *    npx hardhat run scripts/moneypot-flow.ts --network sepolia
  */
 
+export async function connectContractAddress<T extends any>(
+  ethers: HardhatEthers,
+  name,
+  address: string
+): Promise<T> {
+  const factory = await ethers.getContractFactory(name)
+  const contract = factory.attach(address) as unknown as T
+  return contract
+}
+
 async function main() {
   const connection = await hre.network.connect()
   const { ethers } = connection
@@ -45,9 +58,8 @@ async function main() {
   // Deploy or connect to MoneyPot contracts via Ignition
   console.log("🔧 Deploying/Connecting to MoneyPot contracts...")
 
-  const { moneyPot, underlyingToken } = await connection.ignition.deploy(
-    MoneyPotModule,
-    {
+  const { moneyPotAddress, underlyingTokenAddress } =
+    await connection.ignition.deploy(MoneyPotModule, {
       parameters: {
         MoneyPotModule: {
           verifier: verifier.address,
@@ -57,7 +69,17 @@ async function main() {
             "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
         },
       },
-    }
+    })
+
+  const moneyPot = await connectContractAddress<MoneyPot>(
+    ethers,
+    "MoneyPot",
+    moneyPotAddress
+  )
+  const underlyingToken = await connectContractAddress<MoneyPotToken>(
+    ethers,
+    "MoneyPotToken",
+    underlyingTokenAddress
   )
 
   console.log(`💰 MoneyPot Contract: ${await moneyPot.getAddress()}`)
