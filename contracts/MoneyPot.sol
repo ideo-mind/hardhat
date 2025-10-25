@@ -2,10 +2,9 @@
 pragma solidity ^0.8.28;
 
 import "./MoneyPotToken.sol";
+import "./MoneyPotPyth.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
-import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 
 /**
  * @title MoneyPot
@@ -17,7 +16,7 @@ import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
  * - Implements MoneyPot game logic with proxied token
  * - Maintains separation of concerns: token proxy logic in parent, game logic here
  */
-contract MoneyPot is MoneyPotToken {
+contract MoneyPot is MoneyPotToken, MoneyPotPyth {
     using SafeERC20 for IERC20Metadata;
 
     // Constants
@@ -25,16 +24,8 @@ contract MoneyPot is MoneyPotToken {
     uint256 public constant HUNTER_SHARE_PERCENT = 60;
     uint256 public constant CREATOR_ENTRY_FEE_SHARE_PERCENT = 50;
     uint256 public constant MIN_FEE = 100 gwei;
-    uint256 public constant ENTRY_FEE_USD_CENTS = 10; // $0.10 in cents
-
-    // Pyth ETH/USD price feed ID (mainnet)
-    bytes32 public constant ETH_USD_PRICE_ID =
-        0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace;
-
     // State variables
     address public verifier;
-    IPyth public pythInstance;
-    bool public pythConfigured;
 
     // Structs
     struct MoneyPotData {
@@ -101,9 +92,7 @@ contract MoneyPot is MoneyPotToken {
     error AttemptExpired();
     error AttemptCompleted();
     error Unauthorized();
-    error PythNotConfigured();
     error InsufficientEthPayment(uint256 required, uint256 sent);
-    error InvalidEthPrice();
 
     constructor() {}
 
@@ -111,36 +100,15 @@ contract MoneyPot is MoneyPotToken {
      * @dev Initialize the MoneyPot contract
      * @param _token Address of the ERC20 token to use
      * @param _verifier Address of the verifier
-     * @param _pythInstance Address of the Pyth contract (optional)
      */
     function initialize(
         IERC20Metadata _token,
-        address _verifier,
-        address _pythInstance
+        address _verifier
     ) external onlyOwner {
         // Initialize the underlying token
         initializeToken(_token);
 
         verifier = _verifier;
-
-        // Configure Pyth if provided
-        if (_pythInstance != address(0)) {
-            pythInstance = IPyth(_pythInstance);
-            pythConfigured = true;
-        }
-    }
-
-    /**
-     * @dev Initialize Pyth separately
-     * @param _pythInstance Address of the Pyth contract
-     */
-    function initPyth(address _pythInstance) external onlyOwner {
-        if (_pythInstance != address(0)) {
-            pythInstance = IPyth(_pythInstance);
-            pythConfigured = true;
-        } else {
-            pythConfigured = false;
-        }
     }
 
     function createPot(
@@ -172,43 +140,8 @@ contract MoneyPot is MoneyPotToken {
         return id;
     }
 
-    function attemptPot(uint256 potId) external nonReentrant returns (uint256) {
-        MoneyPotData storage pot = pots[potId];
-
-        if (!pot.isActive) revert PotNotActive();
-        if (block.timestamp >= pot.expiresAt) revert ExpiredPot();
-
-        uint256 entryFee = pot.fee;
-        uint256 creatorShare = (entryFee * CREATOR_ENTRY_FEE_SHARE_PERCENT) /
-            100;
-        uint256 platformShare = entryFee - creatorShare;
-
-        //TODO: support for ether payment
-
-        underlying.safeTransferFrom(msg.sender, pot.creator, creatorShare);
-        underlying.safeTransferFrom(msg.sender, address(this), platformShare);
-
-        uint256 difficulty = (pot.attemptsCount % DIFFICULTY_MOD) + 3;
-        pot.attemptsCount++;
-
-        uint256 attemptId = nextAttemptId++;
-
-        attempts[attemptId] = Attempt({
-            id: attemptId,
-            potId: potId,
-            hunter: msg.sender,
-            expiresAt: block.timestamp + 300,
-            difficulty: difficulty,
-            isCompleted: false
-        });
-
-        emit PotAttempted(attemptId, potId, msg.sender, block.timestamp);
-        return attemptId;
-    }
-
-    function attemptPotWithEth(
-        uint256 potId,
-        bytes[] calldata priceUpdateData
+    function attemptPot(
+        uint256 potId
     ) external payable nonReentrant returns (uint256) {
         MoneyPotData storage pot = pots[potId];
 
@@ -220,37 +153,38 @@ contract MoneyPot is MoneyPotToken {
             100;
         uint256 platformShare = entryFee - creatorShare;
 
-        // Handle ETH payment
-        if (!pythConfigured) revert PythNotConfigured();
+        // Handle ETH payment if msg.value > 0 and Pyth is configured
+        if (msg.value > 0) {
+            if (!pythConfigured) revert PythNotConfigured();
 
-        // Update price feeds first
-        uint256 updateFee = pythInstance.getUpdateFee(priceUpdateData);
-        if (msg.value < updateFee) {
-            revert InsufficientEthPayment(updateFee, msg.value);
+            // Get required ETH amount for $0.10 entry fee using stale exchange rate
+            uint256 requiredEth = getEthForEntryFee();
+
+            if (msg.value < requiredEth) {
+                revert InsufficientEthPayment(requiredEth, msg.value);
+            }
+
+            // Refund excess ETH
+            if (msg.value > requiredEth) {
+                payable(msg.sender).transfer(msg.value - requiredEth);
+            }
+
+            // Send ETH to creator and platform based on shares
+            uint256 creatorEthShare = (requiredEth *
+                CREATOR_ENTRY_FEE_SHARE_PERCENT) / 100;
+            uint256 platformEthShare = requiredEth - creatorEthShare;
+
+            payable(pot.creator).transfer(creatorEthShare);
+            payable(address(this)).transfer(platformEthShare);
+        } else {
+            // Traditional token payment
+            underlying.safeTransferFrom(msg.sender, pot.creator, creatorShare);
+            underlying.safeTransferFrom(
+                msg.sender,
+                address(this),
+                platformShare
+            );
         }
-
-        pythInstance.updatePriceFeeds{value: updateFee}(priceUpdateData);
-
-        // Calculate required ETH amount for $0.10 entry fee
-        uint256 requiredEth = calculateEthForUsdCents(ENTRY_FEE_USD_CENTS);
-        uint256 totalRequired = requiredEth + updateFee;
-
-        if (msg.value < totalRequired) {
-            revert InsufficientEthPayment(totalRequired, msg.value);
-        }
-
-        // Refund excess ETH
-        if (msg.value > totalRequired) {
-            payable(msg.sender).transfer(msg.value - totalRequired);
-        }
-
-        // Send ETH to creator and platform based on shares
-        uint256 creatorEthShare = (requiredEth *
-            CREATOR_ENTRY_FEE_SHARE_PERCENT) / 100;
-        uint256 platformEthShare = requiredEth - creatorEthShare;
-
-        payable(pot.creator).transfer(creatorEthShare);
-        payable(address(this)).transfer(platformEthShare);
 
         uint256 difficulty = (pot.attemptsCount % DIFFICULTY_MOD) + 3;
         pot.attemptsCount++;
@@ -312,55 +246,6 @@ contract MoneyPot is MoneyPotToken {
         underlying.safeTransfer(pot.creator, pot.totalAmount);
 
         emit PotExpired(potId, pot.creator, block.timestamp);
-    }
-
-    /**
-     * @dev Calculate ETH amount required for a given USD cents amount using Pyth price feed
-     * @param usdCents Amount in USD cents (e.g., 10 for $0.10)
-     * @return Required ETH amount in wei
-     */
-    function calculateEthForUsdCents(
-        uint256 usdCents
-    ) public view returns (uint256) {
-        if (!pythConfigured) revert PythNotConfigured();
-
-        PythStructs.Price memory ethPrice = pythInstance.getPriceUnsafe(
-            ETH_USD_PRICE_ID
-        );
-
-        if (ethPrice.price <= 0) revert InvalidEthPrice();
-
-        // Convert USD cents to USD (multiply by 10^2 for cents to dollars)
-        // Then convert to wei (multiply by 10^18)
-        // Then divide by ETH price (which is already scaled by 10^ethPrice.expo)
-        uint256 usdAmount = usdCents * 10 ** (18 - 2);
-
-        // Handle price scaling: Pyth prices are scaled by 10^expo
-        uint256 scaledPrice;
-        if (ethPrice.expo < 0) {
-            scaledPrice =
-                uint256(uint64(ethPrice.price)) /
-                (10 ** uint256(uint32(-ethPrice.expo)));
-        } else {
-            scaledPrice =
-                uint256(uint64(ethPrice.price)) *
-                (10 ** uint256(uint32(ethPrice.expo)));
-        }
-
-        return (usdAmount * 10 ** 18) / scaledPrice;
-    }
-
-    /**
-     * @dev Get current ETH/USD price from Pyth
-     * @return Current ETH price in USD
-     */
-    function getCurrentEthUsdPrice() external view returns (int64, int32) {
-        if (!pythConfigured) revert PythNotConfigured();
-
-        PythStructs.Price memory price = pythInstance.getPriceUnsafe(
-            ETH_USD_PRICE_ID
-        );
-        return (price.price, price.expo);
     }
 
     // View functions

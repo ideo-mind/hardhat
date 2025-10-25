@@ -36,9 +36,9 @@ contract MoneyPotTest is Test {
         vm.prank(owner);
         moneyPot = new MoneyPot();
 
-        // Initialize MoneyPot with mock token and verifier (no Pyth for tests)
+        // Initialize MoneyPot with mock token and verifier
         vm.prank(owner);
-        moneyPot.initialize(mockToken, verifier, address(0));
+        moneyPot.initialize(mockToken, verifier);
 
         // Give creator some tokens and approve MoneyPot to spend them
         vm.prank(owner);
