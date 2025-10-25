@@ -5,6 +5,7 @@ import hardhatToolboxMochaEthersPlugin from "@nomicfoundation/hardhat-toolbox-mo
 import keystorePlugin from "@nomicfoundation/hardhat-keystore"
 import hardhatVerify from "@nomicfoundation/hardhat-verify"
 import hardhatTypechain from "@nomicfoundation/hardhat-typechain"
+import HardhatAccounts from "@solidstate/hardhat-accounts"
 
 import type { HardhatUserConfig } from "hardhat/config"
 import * as process from "process"
@@ -58,6 +59,7 @@ const config: _Config = {
     keystorePlugin,
     hardhatVerify,
     hardhatTypechain,
+    HardhatAccounts,
   ],
   solidity: {
     version: "0.8.28",
