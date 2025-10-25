@@ -3,13 +3,14 @@ pragma solidity ^0.8.28;
 
 import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @title MoneyPotPyth
  * @dev Simple Pyth integration for exchange rates
  * @notice Provides ETH/USD exchange rate functionality for MoneyPot
  */
-contract MoneyPotPyth {
+contract MoneyPotPyth is Ownable {
     // Pyth ETH/USD price feed ID (configurable)
     bytes32 public ethUsdPriceId;
 
@@ -21,12 +22,17 @@ contract MoneyPotPyth {
     error PythNotConfigured();
     error InvalidEthPrice();
 
+    constructor() Ownable(msg.sender) {}
+
     /**
      * @dev Initialize Pyth price feed
      * @param _pythInstance Address of the Pyth contract
      * @param _priceId Price feed ID for ETH/USD
      */
-    function initializePyth(address _pythInstance, bytes32 _priceId) external {
+    function initializePyth(
+        address _pythInstance,
+        bytes32 _priceId
+    ) external onlyOwner {
         if (_pythInstance != address(0)) {
             pythInstance = IPyth(_pythInstance);
             ethUsdPriceId = _priceId;
