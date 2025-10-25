@@ -88,12 +88,12 @@ contract MoneyPotPyth {
     }
 
     /**
-     * @dev Get ETH amount for given USD cents using stale exchange rate
-     * @param usdCents Amount in USD cents (e.g., 10 for $0.10)
+     * @dev Get ETH amount for given USD amount using stale exchange rate
+     * @param usdAmount Amount in USD (e.g., 0.1 for $0.10)
      * @return Required ETH amount in wei
      */
     function getExchangeRateForUSD(
-        uint256 usdCents
+        uint256 usdAmount
     ) internal view returns (uint256) {
         if (!pythConfigured) revert PythNotConfigured();
 
@@ -103,9 +103,9 @@ contract MoneyPotPyth {
 
         if (ethPrice.price <= 0) revert InvalidEthPrice();
 
-        // Convert USD cents to ETH using stale price
-        // USD cents to wei: usdCents * 10^16 (since 1 USD = 10^18 wei, 1 cent = 10^16 wei)
-        uint256 usdAmount = usdCents * 10 ** 16;
+        // Convert USD amount to ETH using stale price
+        // USD amount is in wei (1 USD = 10^18 wei)
+        uint256 usdAmountWei = usdAmount;
 
         // Handle price scaling: Pyth prices are scaled by 10^expo
         uint256 scaledPrice;
@@ -119,7 +119,7 @@ contract MoneyPotPyth {
                 (10 ** uint256(uint32(ethPrice.expo)));
         }
 
-        return (usdAmount * 10 ** 18) / scaledPrice;
+        return (usdAmountWei * 10 ** 18) / scaledPrice;
     }
 
     /**
