@@ -56,7 +56,7 @@ export const ACCOUNTS: Account[] = [
     name: "admin",
     privateKey: loadPrivateKey(
       "admin",
-      "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+      "0xa52a65c1736210ed8dec38c8a96876fe8e30634417da4a15f5f2537a9d05ee03"
     ),
     metadata: {},
   },
@@ -64,7 +64,7 @@ export const ACCOUNTS: Account[] = [
     name: "verifier",
     privateKey: loadPrivateKey(
       "verifier",
-      "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+      "0xa52a65c1736210ed8dec38c8a96876fe8e30634417da4a15f5f2537a9d05ee03"
     ),
     metadata: {},
   },
@@ -72,7 +72,7 @@ export const ACCOUNTS: Account[] = [
     name: "",
     privateKey: loadEnv(
       "PRIVATE_KEY",
-      "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+      "0xa52a65c1736210ed8dec38c8a96876fe8e30634417da4a15f5f2537a9d05ee03"
     ),
     metadata: {},
   },
