@@ -79,6 +79,10 @@ const MoneyPotModule = buildModule("MoneyPotModule", (m) => {
       id: "initialize_pyth",
       after: [moneyPot],
     })
+  } else {
+    console.log(
+      "No Pyth instance or price ID provided, skipping Pyth initialization"
+    )
   }
 
   // Return the deployed contracts
