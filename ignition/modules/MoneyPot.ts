@@ -42,6 +42,7 @@ const MoneyPotModule = buildModule("MoneyPotModule", (m) => {
   if (tokenAddress !== undefined) {
     try {
       underlyingToken = m.contractAt("IERC20", tokenAddress)
+      underlyingToken.waitForDeployment()
     } catch (error) {
       // If contract doesn't exist at address, deploy a new one
       console.error(
@@ -57,7 +58,7 @@ const MoneyPotModule = buildModule("MoneyPotModule", (m) => {
   }
 
   if (deployToken) {
-    underlyingToken = m.contract("ERC20", [
+    underlyingToken = m.contract("MockERC20", [
       "MoneyPot Token",
       "MPT",
       18,
