@@ -93,19 +93,16 @@ const MoneyPotModule = buildModule("MoneyPotModule", (m) => {
     after: [moneyPot],
   })
 
-  // TODO:
+  // Initialize Pyth if parameters are provided
+  const pythInstance = m.getParameter("pythInstance", "")
+  const priceId = m.getParameter("priceId", "")
 
-  m.call(moneyPot, "initalizeToken", [underlyingToken], {
-    id: "initialize_token",
-    after: [moneyPot],
-  })
-
-  const pythInstance = m.getParameter("pythInstance")
-  const priceId = m.getParameter("priceId")
-  m.call(moneyPot, "initializePyth", [pythInstance, priceId], {
-    id: "initialize_pyth",
-    after: [moneyPot],
-  })
+  if (pythInstance && priceId) {
+    m.call(moneyPot, "initializePyth", [pythInstance, priceId], {
+      id: "initialize_pyth",
+      after: [moneyPot],
+    })
+  }
 
   // Return the deployed contracts
   return {
