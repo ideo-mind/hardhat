@@ -158,8 +158,9 @@ contract MoneyPot is MoneyPotToken, MoneyPotPyth {
             if (!pythConfigured) revert PythNotConfigured();
 
             // Get required ETH amount for entry fee using stale exchange rate
-            // Convert entry fee from cents to USD wei (1 USD = 10^18 wei, 1 cent = 10^16 wei)
-            uint256 entryFeeUsdWei = entryFee * 10 ** 16;
+            // Assume entry fee is in USD-pegged token units (like USDC)
+            // Convert token units to USD wei using token decimals
+            uint256 entryFeeUsdWei = entryFee * (10 ** (18 - this.decimals()));
             uint256 requiredEth = getExchangeRateForUSD(entryFeeUsdWei);
 
             if (msg.value < requiredEth) {
