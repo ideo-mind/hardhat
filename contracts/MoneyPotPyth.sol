@@ -10,9 +10,8 @@ import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
  * @notice Provides ETH/USD exchange rate functionality for MoneyPot
  */
 contract MoneyPotPyth {
-    // Pyth ETH/USD price feed ID (mainnet)
-    bytes32 public constant ETH_USD_PRICE_ID =
-        0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace;
+    // Pyth ETH/USD price feed ID (configurable)
+    bytes32 public ethUsdPriceId;
 
     // State variables
     IPyth public pythInstance;
@@ -25,10 +24,12 @@ contract MoneyPotPyth {
     /**
      * @dev Initialize Pyth price feed
      * @param _pythInstance Address of the Pyth contract
+     * @param _priceId Price feed ID for ETH/USD
      */
-    function initializePyth(address _pythInstance) external {
+    function initializePyth(address _pythInstance, bytes32 _priceId) external {
         if (_pythInstance != address(0)) {
             pythInstance = IPyth(_pythInstance);
+            ethUsdPriceId = _priceId;
             pythConfigured = true;
         } else {
             pythConfigured = false;
@@ -46,7 +47,7 @@ contract MoneyPotPyth {
         if (!pythConfigured) revert PythNotConfigured();
 
         PythStructs.Price memory ethPrice = pythInstance.getPriceUnsafe(
-            ETH_USD_PRICE_ID
+            ethUsdPriceId
         );
 
         if (ethPrice.price <= 0) revert InvalidEthPrice();
@@ -78,7 +79,7 @@ contract MoneyPotPyth {
         if (!pythConfigured) revert PythNotConfigured();
 
         PythStructs.Price memory price = pythInstance.getPriceUnsafe(
-            ETH_USD_PRICE_ID
+            ethUsdPriceId
         );
         return (price.price, price.expo);
     }

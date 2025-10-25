@@ -14,6 +14,7 @@ const MoneyPotPythModule = buildModule("MoneyPotPythModule", (m) => {
   // Get deployment parameters from configuration files
   const moneyPotAddress = m.getParameter("moneyPotAddress")
   const pythInstance = m.getParameter("pythInstance")
+  const priceId = m.getParameter("priceId")
 
   // Validate required parameters
   if (!moneyPotAddress) {
@@ -24,11 +25,15 @@ const MoneyPotPythModule = buildModule("MoneyPotPythModule", (m) => {
     throw new Error("Pyth instance address is required but not provided")
   }
 
+  if (!priceId) {
+    throw new Error("Price ID is required but not provided")
+  }
+
   // Get the existing MoneyPot contract
   const moneyPot = m.contractAt("MoneyPot", moneyPotAddress)
 
   // Initialize Pyth for the MoneyPot contract
-  m.call(moneyPot, "initializePyth", [pythInstance], {
+  m.call(moneyPot, "initializePyth", [pythInstance, priceId], {
     id: "initialize_pyth",
     after: [moneyPot],
   })
