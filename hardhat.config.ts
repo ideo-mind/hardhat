@@ -3,6 +3,7 @@ import "@nomicfoundation/hardhat-toolbox-viem"
 
 import hardhatToolboxMochaEthersPlugin from "@nomicfoundation/hardhat-toolbox-mocha-ethers"
 import keystorePlugin from "@nomicfoundation/hardhat-keystore"
+import hardhatVerify from "@nomicfoundation/hardhat-verify"
 
 import type { HardhatUserConfig } from "hardhat/config"
 import * as process from "process"
@@ -51,7 +52,7 @@ interface _Config extends HardhatUserConfig {
 }
 
 const config: _Config = {
-  plugins: [hardhatToolboxMochaEthersPlugin, keystorePlugin],
+  plugins: [hardhatToolboxMochaEthersPlugin, keystorePlugin, hardhatVerify],
   solidity: {
     version: "0.8.28",
     npmFilesToBuild: [
@@ -182,41 +183,41 @@ const config: _Config = {
     blockscout: {
       enabled: true,
     },
-  },
+    etherscan: {
+      apiKey: {
+        cc: "empty",
+        somnia: "empty",
+        default: process.env.ETHERSCAN_API_KEY,
+      },
 
-  etherscan: {
-    apiKey: {
-      cc: "empty",
-      somnia: "empty",
-      default: process.env.ETHERSCAN_API_KEY,
+      customChains: [
+        {
+          network: "cc",
+          chainId: 102031,
+          urls: {
+            apiURL: "https://creditcoin-testnet.blockscout.com/api",
+            browserURL: "https://creditcoin-testnet.blockscout.com",
+          },
+        },
+        {
+          network: "somnia",
+          chainId: 50312,
+          urls: {
+            apiURL: "https://shannon-explorer.somnia.network/api",
+            browserURL: "https://shannon-explorer.somnia.network",
+          },
+        },
+      ],
     },
+    sourcify: {
+      // Disabled by default
+      // Doesn't need an API key
+      enabled: true,
+      apiUrl: "https://sourcify.dev/server",
+      browserUrl: "https://repo.sourcify.dev",
+    },
+  },
 
-    customChains: [
-      {
-        network: "cc",
-        chainId: 102031,
-        urls: {
-          apiURL: "https://creditcoin-testnet.blockscout.com/api",
-          browserURL: "https://creditcoin-testnet.blockscout.com",
-        },
-      },
-      {
-        network: "somnia",
-        chainId: 50312,
-        urls: {
-          apiURL: "https://shannon-explorer.somnia.network/api",
-          browserURL: "https://shannon-explorer.somnia.network",
-        },
-      },
-    ],
-  },
-  sourcify: {
-    // Disabled by default
-    // Doesn't need an API key
-    enabled: true,
-    apiUrl: "https://sourcify.dev/server",
-    browserUrl: "https://repo.sourcify.dev",
-  },
   // TypeChain configuration
   typechain: {
     outDir: "typechain-types",
