@@ -56,42 +56,6 @@ contract MoneyPotToken is Ownable, ReentrancyGuard {
     }
 
     /**
-     * @dev Transfer tokens using transferFrom to preserve msg.sender context
-     * User must first approve this contract to spend their tokens
-     * @param to The recipient address
-     * @param amount The amount to transfer
-     * @return success Whether the transfer was successful
-     */
-    function transfer(address to, uint256 amount) external nonReentrant returns (bool) {
-        // Use transferFrom with msg.sender as the from address
-        // This requires the user to have approved this contract first
-        underlying.safeTransferFrom(msg.sender, to, amount);
-        return true;
-    }
-
-    /**
-     * @dev Transfer tokens from one account to another
-     * @param from The sender address
-     * @param to The recipient address
-     * @param amount The amount to transfer
-     * @return success Whether the transfer was successful
-     */
-    function transferFrom(address from, address to, uint256 amount) external nonReentrant returns (bool) {
-        underlying.safeTransferFrom(from, to, amount);
-        return true;
-    }
-
-    /**
-     * @dev Approve spender to spend tokens
-     * @param spender The address to approve
-     * @param amount The amount to approve
-     * @return success Whether the approval was successful
-     */
-    function approve(address spender, uint256 amount) external returns (bool) {
-        return underlying.approve(spender, amount);
-    }
-
-    /**
      * @dev Transfer tokens from one account to another
      * @param from The sender address
      * @param to The recipient address
