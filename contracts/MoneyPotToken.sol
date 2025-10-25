@@ -56,16 +56,13 @@ contract MoneyPotToken is Ownable, ReentrancyGuard {
     }
 
     /**
-     * @dev Transfer tokens using the safe proxy pattern
+     * @dev Transfer tokens using transferFrom to preserve msg.sender context
      * User must first approve this contract to spend their tokens
      * @param to The recipient address
      * @param amount The amount to transfer
      * @return success Whether the transfer was successful
      */
-    function transfer(
-        address to,
-        uint256 amount
-    ) external nonReentrant returns (bool) {
+    function transfer(address to, uint256 amount) external nonReentrant returns (bool) {
         // Use transferFrom with msg.sender as the from address
         // This requires the user to have approved this contract first
         underlying.safeTransferFrom(msg.sender, to, amount);
@@ -73,7 +70,29 @@ contract MoneyPotToken is Ownable, ReentrancyGuard {
     }
 
     /**
-     * @dev Transfer tokens from one account to another using the safe proxy pattern
+     * @dev Transfer tokens from one account to another
+     * @param from The sender address
+     * @param to The recipient address
+     * @param amount The amount to transfer
+     * @return success Whether the transfer was successful
+     */
+    function transferFrom(address from, address to, uint256 amount) external nonReentrant returns (bool) {
+        underlying.safeTransferFrom(from, to, amount);
+        return true;
+    }
+
+    /**
+     * @dev Approve spender to spend tokens
+     * @param spender The address to approve
+     * @param amount The amount to approve
+     * @return success Whether the approval was successful
+     */
+    function approve(address spender, uint256 amount) external returns (bool) {
+        return underlying.approve(spender, amount);
+    }
+
+    /**
+     * @dev Transfer tokens from one account to another
      * @param from The sender address
      * @param to The recipient address
      * @param amount The amount to transfer
@@ -84,27 +103,7 @@ contract MoneyPotToken is Ownable, ReentrancyGuard {
         address to,
         uint256 amount
     ) external nonReentrant returns (bool) {
-        underlying.safeTransferFrom(from, to, amount);
-        return true;
-    }
-
-    /**
-     * @dev Approve spender to spend tokens on behalf of msg.sender
-     * @param spender The address to approve
-     * @param amount The amount to approve
-     * @return success Whether the approval was successful
-     */
-    function approve(address spender, uint256 amount) external returns (bool) {
-        // This wont' work because the underlying token is not a proxy token
-        // and the approve function is not implemented in the underlying token
-        // so we need to implement it here
-        // but we can't because we don't have access to the underlying token
-        // so we need to use the safe proxy pattern
-        // but we can't because we don't have access to the underlying token
-        // return underlying.approve(spender, amount);
-
-        revert("");
-        return true;
+        return underlying.transferFrom(from, to, amount);
     }
 
     /**
