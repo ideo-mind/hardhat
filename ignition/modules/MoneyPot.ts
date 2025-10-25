@@ -35,53 +35,30 @@ const MoneyPotModule = buildModule("MoneyPotModule", (m) => {
   // Note: We'll check this at runtime since tokenAddress is a runtime parameter
   const hasTokenAddress = tokenAddress
 
-  if (hasTokenAddress) {
-    // Try to use existing token contract - will fail if no contract exists at address
-    try {
-      underlyingToken = m.contractAt("IERC20", tokenAddress)
-      tokenName = "Existing Token"
-      tokenSymbol = "EXT"
-    } catch (error) {
-      // If contract doesn't exist at address, deploy a new one
-      console.log(
-        `No valid contract found at token address ${tokenAddress}, deploying new token...`
-      )
+  let deployToken = false
 
-      const tokenNameParam = m.getParameter("tokenName", "Deployed Token")
-      const tokenSymbolParam = m.getParameter("tokenSymbol", "DTOKEN")
-      const tokenDecimals = m.getParameter("tokenDecimals", 18)
-      const initialSupply = m.getParameter(
-        "initialSupply",
-        parseEther("1000000")
-      ) // 1M tokens
+  // Try to use existing token contract - will fail if no contract exists at address
+  try {
+    underlyingToken = m.contractAt("IERC20", tokenAddress)
+  } catch (error) {
+    // If contract doesn't exist at address, deploy a new one
+    console.error(
+      `No valid contract found at token address ${tokenAddress}, deploying new token...`
+    )
 
-      underlyingToken = m.contract("ERC20", [
-        tokenNameParam,
-        tokenSymbolParam,
-        tokenDecimals,
-        initialSupply,
-      ])
-      tokenDeployed = true
-      tokenName = "MoneyPot Token"
-      tokenSymbol = "MPT"
-    }
-  } else {
+    deployToken = true
+  }
+
+  if (deployToken) {
     console.log("No token address provided, deploying new token...")
-    // Deploy new token contract
-    const tokenNameParam = m.getParameter("tokenName", "Deployed Token")
-    const tokenSymbolParam = m.getParameter("tokenSymbol", "DTOKEN")
-    const tokenDecimals = m.getParameter("tokenDecimals", 18)
-    const initialSupply = m.getParameter("initialSupply", parseEther("1000000")) // 1M tokens
 
     underlyingToken = m.contract("ERC20", [
-      tokenNameParam,
-      tokenSymbolParam,
-      tokenDecimals,
-      initialSupply,
+      "MoneyPot Token",
+      "MPT",
+      18,
+      parseEther("1000000"),
     ])
     tokenDeployed = true
-    tokenName = "Deployed Token"
-    tokenSymbol = "DTOKEN"
   }
 
   // Deploy the MoneyPot contract
