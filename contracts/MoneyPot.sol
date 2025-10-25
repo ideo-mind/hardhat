@@ -22,7 +22,7 @@ contract MoneyPot is MoneyPotToken, MoneyPotPyth {
     // Constants
     uint256 public constant DIFFICULTY_MOD = 9;
     uint256 public constant HUNTER_SHARE_PERCENT = 60;
-    uint256 public constant CREATOR_ENTRY_FEE_SHARE_PERCENT = 50;
+    uint256 public constant CREATOR_ENTRY_FEE_SHARE_PERCENT = 60;
     uint256 public constant MIN_FEE = 100 gwei;
     // State variables
     address public verifier;
