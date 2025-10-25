@@ -95,7 +95,16 @@ contract MoneyPotToken is Ownable, ReentrancyGuard {
      * @return success Whether the approval was successful
      */
     function approve(address spender, uint256 amount) external returns (bool) {
-        return underlying.approve(spender, amount);
+        // This wont' work because the underlying token is not a proxy token
+        // and the approve function is not implemented in the underlying token
+        // so we need to implement it here
+        // but we can't because we don't have access to the underlying token
+        // so we need to use the safe proxy pattern
+        // but we can't because we don't have access to the underlying token
+        // return underlying.approve(spender, amount);
+
+        revert("");
+        return true;
     }
 
     /**
