@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
@@ -32,6 +32,7 @@ contract MoneyPotToken is Ownable, ReentrancyGuard {
      */
     function initializeToken(IERC20Metadata _underlying) public onlyOwner {
         require(address(underlying) == address(0), "Already initialized");
+        // require(address(_underlying) != address(0), "Invalid underlying token");
         underlying = _underlying;
     }
 

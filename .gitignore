@@ -18,3 +18,8 @@
 
 # Hardhat coverage reports
 /coverage
+
+
+/typechain-types
+
+ignition/deployments

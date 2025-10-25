@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import "./MoneyPotToken.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
  * @title MoneyPot
@@ -15,13 +16,16 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
  * - Maintains separation of concerns: token proxy logic in parent, game logic here
  */
 contract MoneyPot is MoneyPotToken {
+    using SafeERC20 for IERC20Metadata;
+    
     // Constants
-    uint256 public constant DIFFICULTY_MOD = 3;
-    uint256 public constant HUNTER_SHARE_PERCENT = 40;
+    uint256 public constant DIFFICULTY_MOD = 9;
+    uint256 public constant HUNTER_SHARE_PERCENT = 60;
     uint256 public constant CREATOR_ENTRY_FEE_SHARE_PERCENT = 50;
+    uint256 public constant MIN_FEE = 100 gwei;
 
     // State variables
-    address public trustedOracle;
+    address public verifier;
 
     // Structs
     struct MoneyPotData {
@@ -81,7 +85,7 @@ contract MoneyPot is MoneyPotToken {
     );
 
     // Errors
-    error InvalidFee();
+    error InvalidFee(uint256 minFee, uint256 fee);
     error PotNotActive();
     error ExpiredPot();
     error NotExpired();
@@ -94,17 +98,16 @@ contract MoneyPot is MoneyPotToken {
     /**
      * @dev Initialize the MoneyPot contract
      * @param _token Address of the ERC20 token to use
-     * @param _trustedOracle Address of the trusted oracle
+     * @param _verifier Address of the verifier
      */
     function initialize(
         IERC20Metadata _token,
-        address _trustedOracle
+        address _verifier
     ) external onlyOwner {
         // Initialize the underlying token
         initializeToken(_token);
 
-        // Set MoneyPot specific parameters
-        trustedOracle = _trustedOracle;
+        verifier = _verifier;
     }
 
     function createPot(
@@ -113,7 +116,7 @@ contract MoneyPot is MoneyPotToken {
         uint256 fee,
         address oneFaAddress
     ) external nonReentrant returns (uint256) {
-        if (fee > amount) revert InvalidFee();
+        if (fee > amount || fee < MIN_FEE) revert InvalidFee(MIN_FEE, fee);
 
         uint256 id = nextPotId++;
 
@@ -130,10 +133,7 @@ contract MoneyPot is MoneyPotToken {
         });
 
         potIds.push(id);
-        require(
-            this.transferFrom(msg.sender, address(this), amount),
-            "Transfer failed"
-        );
+        underlying.safeTransferFrom(msg.sender, address(this), amount);
 
         emit PotCreated(id, msg.sender, block.timestamp);
         return id;
@@ -150,19 +150,15 @@ contract MoneyPot is MoneyPotToken {
             100;
         uint256 platformShare = entryFee - creatorShare;
 
-        require(
-            this.transferFrom(msg.sender, pot.creator, creatorShare),
-            "Transfer failed"
-        );
-        require(
-            this.transferFrom(msg.sender, address(this), platformShare),
-            "Transfer failed"
-        );
+        //TODO: support for ether payment
 
+        underlying.safeTransferFrom(msg.sender, pot.creator, creatorShare);
+        underlying.safeTransferFrom(msg.sender, address(this), platformShare);
+
+        uint256 difficulty = (pot.attemptsCount % DIFFICULTY_MOD) + 3;
         pot.attemptsCount++;
 
         uint256 attemptId = nextAttemptId++;
-        uint256 difficulty = (pot.attemptsCount % DIFFICULTY_MOD) + 2;
 
         attempts[attemptId] = Attempt({
             id: attemptId,
@@ -181,7 +177,7 @@ contract MoneyPot is MoneyPotToken {
         uint256 attemptId,
         bool status
     ) external nonReentrant {
-        if (msg.sender != trustedOracle) revert Unauthorized();
+        if (msg.sender != verifier) revert Unauthorized();
 
         Attempt storage attempt = attempts[attemptId];
         MoneyPotData storage pot = pots[attempt.potId];
@@ -199,10 +195,7 @@ contract MoneyPot is MoneyPotToken {
             uint256 hunterShare = (pot.totalAmount * HUNTER_SHARE_PERCENT) /
                 100;
 
-            require(
-                this.transfer(attempt.hunter, hunterShare),
-                "Transfer failed"
-            );
+            underlying.safeTransfer(attempt.hunter, hunterShare);
             // Note: We can't burn tokens from the underlying contract, so we keep the platform share
             // In a real implementation, you might want to send it to a treasury or burn mechanism
 
@@ -219,7 +212,7 @@ contract MoneyPot is MoneyPotToken {
         if (block.timestamp < pot.expiresAt) revert NotExpired();
 
         pot.isActive = false;
-        require(this.transfer(pot.creator, pot.totalAmount), "Transfer failed");
+        underlying.safeTransfer(pot.creator, pot.totalAmount);
 
         emit PotExpired(potId, pot.creator, block.timestamp);
     }
@@ -266,6 +259,6 @@ contract MoneyPot is MoneyPotToken {
      */
     function updateVerifier(address _verifier) external onlyOwner {
         require(_verifier != address(0), "Invalid verifier");
-        trustedOracle = _verifier;
+        verifier = _verifier;
     }
 }

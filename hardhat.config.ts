@@ -1,18 +1,21 @@
-import "@nomicfoundation/hardhat-ignition-viem"
+import "@nomicfoundation/hardhat-ignition"
 import "@nomicfoundation/hardhat-toolbox-viem"
-import * as dotenv from "dotenv"
-import { HardhatUserConfig, task } from "hardhat/config"
-import * as process from "process"
-import { NetworkUserConfig } from "hardhat"
-import { ACCOUNT_ADDRESSES, PRIVATE_KEYS } from "./utils/accounts"
 
+import hardhatToolboxMochaEthersPlugin from "@nomicfoundation/hardhat-toolbox-mocha-ethers"
+import keystorePlugin from "@nomicfoundation/hardhat-keystore"
+
+import type { HardhatUserConfig } from "hardhat/config"
+import * as process from "process"
+import type { NetworkUserConfig } from "hardhat/types/config"
+
+// import dotenvx from "@dotenvx/dotenvx"
+// dotenvx.config()
+// import dotenv from "dotenv"
+// dotenv.config({ path: "./.env" })
+
+import { ACCOUNT_ADDRESSES, PRIVATE_KEYS } from "./utils/accounts"
 // Import tasks
 import "./tasks"
-
-// Load environment variables
-const ENV_FILE = process.env.CONFIG || "./.env"
-console.log(`ENV_FILE is ${ENV_FILE}`)
-dotenv.config({ path: ENV_FILE })
 
 let NETWORK = process.env.NETWORK || "hardhat"
 const INFURA_KEY = process.env.INFURA_KEY || ""
@@ -48,8 +51,13 @@ interface _Config extends HardhatUserConfig {
 }
 
 const config: _Config = {
+  plugins: [hardhatToolboxMochaEthersPlugin, keystorePlugin],
   solidity: {
     version: "0.8.28",
+    npmFilesToBuild: [
+      "@openzeppelin/contracts/token/ERC20/ERC20.sol",
+      "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+    ],
     settings: {
       optimizer: {
         enabled: true,
@@ -89,8 +97,8 @@ const config: _Config = {
       url: ALCHEMY_KEY
         ? `https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_KEY}`
         : INFURA_KEY
-          ? `https://sepolia.infura.io/v3/${INFURA_KEY}`
-          : "https://rpc.sepolia.org",
+        ? `https://sepolia.infura.io/v3/${INFURA_KEY}`
+        : "https://rpc.sepolia.org",
       ws: INFURA_KEY
         ? `wss://sepolia.infura.io/ws/v3/${INFURA_KEY}`
         : undefined,
@@ -113,7 +121,10 @@ const config: _Config = {
     // Somnia Testnet network
     somnia: {
       type: "http",
-      url: `https://rpc.ankr.com/somnia_testnet/${process.env.ANKR_API_KEY || "b538dd90abf174d5a5e91e686b9a0d2bcb80c0531c5d99fe61aa7b2a9720d453"}`,
+      url: `https://rpc.ankr.com/somnia_testnet/${
+        process.env.ANKR_API_KEY ||
+        "b538dd90abf174d5a5e91e686b9a0d2bcb80c0531c5d99fe61aa7b2a9720d453"
+      }`,
       chainId: 50312,
       accounts: PRIVATE_KEYS,
       saveDeployments: true,
@@ -155,6 +166,24 @@ const config: _Config = {
     artifacts: "./artifacts",
   },
 
+  chainDescriptors: {
+    50312: {
+      name: "somnia",
+      blockExplorers: {
+        etherscan: {
+          name: "Somnia Explorer",
+          url: "https://shannon-explorer.somnia.network",
+          apiUrl: "https://shannon-explorer.somnia.network/api",
+        },
+      },
+    },
+  },
+  verify: {
+    blockscout: {
+      enabled: true,
+    },
+  },
+
   etherscan: {
     apiKey: {
       cc: "empty",
@@ -190,7 +219,7 @@ const config: _Config = {
   },
   // TypeChain configuration
   typechain: {
-    outDir: "typechain-types",
+    outDir: "types",
     target: "ethers-v6",
     alwaysGenerateOverloads: false,
     dontOverrideCompile: false,
