@@ -105,7 +105,7 @@ contract MoneyPotTest is Test {
 
         // Now attempt the pot with hunter
         vm.prank(hunter);
-        uint256 attemptId = moneyPot.attemptPot(potId, new bytes[](0));
+        uint256 attemptId = moneyPot.attemptPot(potId);
 
         // Verify attempt was created correctly
         assertEq(attemptId, 0, "First attempt should have ID 0");
@@ -155,7 +155,7 @@ contract MoneyPotTest is Test {
         );
 
         vm.prank(hunter);
-        uint256 attemptId = moneyPot.attemptPot(potId, new bytes[](0));
+        uint256 attemptId = moneyPot.attemptPot(potId);
 
         // Mark attempt as failed by verifier
         vm.prank(verifier);
@@ -188,7 +188,7 @@ contract MoneyPotTest is Test {
         );
 
         vm.prank(hunter);
-        uint256 attemptId = moneyPot.attemptPot(potId, new bytes[](0));
+        uint256 attemptId = moneyPot.attemptPot(potId);
 
         // Mark attempt as successful by verifier
         vm.prank(verifier);
@@ -233,7 +233,7 @@ contract MoneyPotTest is Test {
 
         // First attempt - difficulty should be 3
         vm.prank(hunter);
-        uint256 attemptId1 = moneyPot.attemptPot(potId, new bytes[](0));
+        uint256 attemptId1 = moneyPot.attemptPot(potId);
 
         MoneyPot.Attempt memory attempt1 = moneyPot.getAttempt(attemptId1);
         assertEq(
@@ -248,7 +248,7 @@ contract MoneyPotTest is Test {
 
         // Second attempt - difficulty should be 4
         vm.prank(hunter);
-        uint256 attemptId2 = moneyPot.attemptPot(potId, new bytes[](0));
+        uint256 attemptId2 = moneyPot.attemptPot(potId);
 
         MoneyPot.Attempt memory attempt2 = moneyPot.getAttempt(attemptId2);
         assertEq(
@@ -273,7 +273,7 @@ contract MoneyPotTest is Test {
         );
 
         vm.prank(hunter);
-        uint256 attemptId = moneyPot.attemptPot(potId, new bytes[](0));
+        uint256 attemptId = moneyPot.attemptPot(potId);
 
         // Try to mark attempt as completed by non-verifier (should fail)
         vm.prank(hunter);
@@ -331,7 +331,7 @@ contract MoneyPotTest is Test {
         // Try to attempt expired pot (should fail)
         vm.prank(hunter);
         vm.expectRevert(MoneyPot.ExpiredPot.selector);
-        moneyPot.attemptPot(potId, new bytes[](0));
+        moneyPot.attemptPot(potId);
     }
 
     function test_CannotAttemptInactivePot() public {
@@ -346,7 +346,7 @@ contract MoneyPotTest is Test {
 
         // Attempt and solve the pot
         vm.prank(hunter);
-        uint256 attemptId = moneyPot.attemptPot(potId, new bytes[](0));
+        uint256 attemptId = moneyPot.attemptPot(potId);
 
         vm.prank(verifier);
         moneyPot.attemptCompleted(attemptId, true);
@@ -354,7 +354,7 @@ contract MoneyPotTest is Test {
         // Try to attempt inactive pot (should fail)
         vm.prank(hunter);
         vm.expectRevert(MoneyPot.PotNotActive.selector);
-        moneyPot.attemptPot(potId, new bytes[](0));
+        moneyPot.attemptPot(potId);
     }
 
     function test_InvalidFee() public {

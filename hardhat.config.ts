@@ -64,7 +64,7 @@ const config: _Config = {
         runs: 200,
       },
       evmVersion: "london",
-      viaIR: false,
+      viaIR: true,
     },
   },
   defaultNetwork: NETWORK,

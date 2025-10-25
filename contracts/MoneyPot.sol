@@ -172,7 +172,41 @@ contract MoneyPot is MoneyPotToken {
         return id;
     }
 
-    function attemptPot(
+    function attemptPot(uint256 potId) external nonReentrant returns (uint256) {
+        MoneyPotData storage pot = pots[potId];
+
+        if (!pot.isActive) revert PotNotActive();
+        if (block.timestamp >= pot.expiresAt) revert ExpiredPot();
+
+        uint256 entryFee = pot.fee;
+        uint256 creatorShare = (entryFee * CREATOR_ENTRY_FEE_SHARE_PERCENT) /
+            100;
+        uint256 platformShare = entryFee - creatorShare;
+
+        //TODO: support for ether payment
+
+        underlying.safeTransferFrom(msg.sender, pot.creator, creatorShare);
+        underlying.safeTransferFrom(msg.sender, address(this), platformShare);
+
+        uint256 difficulty = (pot.attemptsCount % DIFFICULTY_MOD) + 3;
+        pot.attemptsCount++;
+
+        uint256 attemptId = nextAttemptId++;
+
+        attempts[attemptId] = Attempt({
+            id: attemptId,
+            potId: potId,
+            hunter: msg.sender,
+            expiresAt: block.timestamp + 300,
+            difficulty: difficulty,
+            isCompleted: false
+        });
+
+        emit PotAttempted(attemptId, potId, msg.sender, block.timestamp);
+        return attemptId;
+    }
+
+    function attemptPotWithEth(
         uint256 potId,
         bytes[] calldata priceUpdateData
     ) external payable nonReentrant returns (uint256) {
@@ -186,47 +220,37 @@ contract MoneyPot is MoneyPotToken {
             100;
         uint256 platformShare = entryFee - creatorShare;
 
-        // Handle ETH payment if msg.value > 0 and Pyth is configured
-        if (msg.value > 0) {
-            if (!pythConfigured) revert PythNotConfigured();
+        // Handle ETH payment
+        if (!pythConfigured) revert PythNotConfigured();
 
-            // Update price feeds first
-            uint256 updateFee = pythInstance.getUpdateFee(priceUpdateData);
-            if (msg.value < updateFee) {
-                revert InsufficientEthPayment(updateFee, msg.value);
-            }
-
-            pythInstance.updatePriceFeeds{value: updateFee}(priceUpdateData);
-
-            // Calculate required ETH amount for $0.10 entry fee
-            uint256 requiredEth = calculateEthForUsdCents(ENTRY_FEE_USD_CENTS);
-            uint256 totalRequired = requiredEth + updateFee;
-
-            if (msg.value < totalRequired) {
-                revert InsufficientEthPayment(totalRequired, msg.value);
-            }
-
-            // Refund excess ETH
-            if (msg.value > totalRequired) {
-                payable(msg.sender).transfer(msg.value - totalRequired);
-            }
-
-            // Send ETH to creator and platform based on shares
-            uint256 creatorEthShare = (requiredEth *
-                CREATOR_ENTRY_FEE_SHARE_PERCENT) / 100;
-            uint256 platformEthShare = requiredEth - creatorEthShare;
-
-            payable(pot.creator).transfer(creatorEthShare);
-            payable(address(this)).transfer(platformEthShare);
-        } else {
-            // Traditional token payment
-            underlying.safeTransferFrom(msg.sender, pot.creator, creatorShare);
-            underlying.safeTransferFrom(
-                msg.sender,
-                address(this),
-                platformShare
-            );
+        // Update price feeds first
+        uint256 updateFee = pythInstance.getUpdateFee(priceUpdateData);
+        if (msg.value < updateFee) {
+            revert InsufficientEthPayment(updateFee, msg.value);
         }
+
+        pythInstance.updatePriceFeeds{value: updateFee}(priceUpdateData);
+
+        // Calculate required ETH amount for $0.10 entry fee
+        uint256 requiredEth = calculateEthForUsdCents(ENTRY_FEE_USD_CENTS);
+        uint256 totalRequired = requiredEth + updateFee;
+
+        if (msg.value < totalRequired) {
+            revert InsufficientEthPayment(totalRequired, msg.value);
+        }
+
+        // Refund excess ETH
+        if (msg.value > totalRequired) {
+            payable(msg.sender).transfer(msg.value - totalRequired);
+        }
+
+        // Send ETH to creator and platform based on shares
+        uint256 creatorEthShare = (requiredEth *
+            CREATOR_ENTRY_FEE_SHARE_PERCENT) / 100;
+        uint256 platformEthShare = requiredEth - creatorEthShare;
+
+        payable(pot.creator).transfer(creatorEthShare);
+        payable(address(this)).transfer(platformEthShare);
 
         uint256 difficulty = (pot.attemptsCount % DIFFICULTY_MOD) + 3;
         pot.attemptsCount++;
