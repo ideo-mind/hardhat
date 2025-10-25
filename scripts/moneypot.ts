@@ -58,8 +58,9 @@ async function main() {
   // Deploy or connect to MoneyPot contracts via Ignition
   console.log("🔧 Deploying/Connecting to MoneyPot contracts...")
 
-  const { moneyPotAddress, underlyingTokenAddress } =
-    await connection.ignition.deploy(MoneyPotModule, {
+  const { moneyPot, underlyingToken } = await connection.ignition.deploy(
+    MoneyPotModule,
+    {
       parameters: {
         MoneyPotModule: {
           verifier: verifier.address,
@@ -69,18 +70,21 @@ async function main() {
             "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
         },
       },
-    })
+    }
+  )
 
-  const moneyPot = await connectContractAddress<MoneyPot>(
-    ethers,
-    "MoneyPot",
-    moneyPotAddress
-  )
-  const underlyingToken = await connectContractAddress<MoneyPotToken>(
-    ethers,
-    "MoneyPotToken",
-    underlyingTokenAddress
-  )
+  // console.log({ moneyPotAddress, underlyingTokenAddress })
+
+  // const moneyPot = await connectContractAddress<MoneyPot>(
+  //   ethers,
+  //   "MoneyPot",
+  //   moneyPotAddress
+  // )
+  // const underlyingToken = await connectContractAddress<MoneyPotToken>(
+  //   ethers,
+  //   "MoneyPotToken",
+  //   underlyingTokenAddress
+  // )
 
   console.log(`💰 MoneyPot Contract: ${await moneyPot.getAddress()}`)
   console.log(`🪙 Token Contract: ${await underlyingToken.getAddress()}`)
