@@ -19,3 +19,6 @@ deploy network=NETWORK *ARGS="":
 
 hardhat *ARGS:
   bun hardhat {{ARGS}}
+
+bun *ARGS:
+  bun {{ARGS}}
