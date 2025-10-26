@@ -20,7 +20,7 @@ contract MoneyPot is MoneyPotToken, MoneyPotPyth {
     using SafeERC20 for IERC20Metadata;
 
     // Constants
-    uint256 public constant DIFFICULTY_MOD = 9;
+    uint256 public constant DIFFICULTY_MOD = 2;
     uint256 public constant HUNTER_SHARE_PERCENT = 90;
     uint256 public constant CREATOR_ENTRY_FEE_SHARE_PERCENT = 50;
     uint256 public constant MIN_FEE = 1 wei;
