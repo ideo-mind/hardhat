@@ -107,7 +107,7 @@ const config: _Config = {
         ? `https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_KEY}`
         : INFURA_KEY
         ? `https://sepolia.infura.io/v3/${INFURA_KEY}`
-        : "https://rpc.sepolia.org",
+        : "https://sepolia.gateway.tenderly.co",
       ws: INFURA_KEY
         ? `wss://sepolia.infura.io/ws/v3/${INFURA_KEY}`
         : undefined,
