@@ -38,14 +38,14 @@ type _Network = NetworkUserConfig & {
   }
 }
 
-const genesisAcc = [
-  ...PRIVATE_KEYS.map((privateKey) => {
+const genesisAcc = 
+  PRIVATE_KEYS.map((privateKey) => {
     return {
       privateKey: privateKey,
       balance: `${1000000000000000000000000n}`,
     }
-  }),
-]
+  })
+
 
 interface _Config extends HardhatUserConfig {
   networks: {
