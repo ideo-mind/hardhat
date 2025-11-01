@@ -74,7 +74,7 @@ const MoneyPotModule = buildModule("MoneyPotModule", (m) => {
   const moneyPot = m.contract("MoneyPot", [])
 
   // Initialize MoneyPot with the token and verifier
-  m.call(moneyPot, "initialize", [underlyingToken, verifier], {
+  const moneyPotInitialization = m.call(moneyPot, "initialize", [underlyingToken, verifier], {
     id: "initialize_money_pot",
     after: [moneyPot],
   })
@@ -89,10 +89,10 @@ const MoneyPotModule = buildModule("MoneyPotModule", (m) => {
     "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"
   )
 
-  m.call(moneyPot, "initializePyth", [pythInstanceAddress, priceId], {
-    id: "initialize_pyth",
-    after: [moneyPot],
-  })
+  // m.call(moneyPot, "initializePyth", [pythInstanceAddress, priceId], {
+  //   id: "initialize_pyth",
+  //   after: [moneyPotInitialization],
+  // })
 
   // Return the deployed contracts
   return {

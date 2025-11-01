@@ -29,3 +29,5 @@ ignition/deployments/chain-*/build-info
 
 !ignition/deployments/chain-*/deployed_addresses.json
 !ignition/deployments/chain-*/journal.jsonl
+
+.env.keys
