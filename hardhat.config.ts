@@ -1,56 +1,54 @@
-import "@nomicfoundation/hardhat-ignition"
-import "@nomicfoundation/hardhat-toolbox-viem"
+import "@nomicfoundation/hardhat-ignition";
+import "@nomicfoundation/hardhat-toolbox-viem";
 
-import hardhatToolboxMochaEthersPlugin from "@nomicfoundation/hardhat-toolbox-mocha-ethers"
-import keystorePlugin from "@nomicfoundation/hardhat-keystore"
-import hardhatVerify from "@nomicfoundation/hardhat-verify"
-import hardhatTypechain from "@nomicfoundation/hardhat-typechain"
-import HardhatAccounts from "@solidstate/hardhat-accounts"
+import hardhatToolboxMochaEthersPlugin from "@nomicfoundation/hardhat-toolbox-mocha-ethers";
+import keystorePlugin from "@nomicfoundation/hardhat-keystore";
+import hardhatVerify from "@nomicfoundation/hardhat-verify";
+import hardhatTypechain from "@nomicfoundation/hardhat-typechain";
+import HardhatAccounts from "@solidstate/hardhat-accounts";
 
-import type { HardhatUserConfig } from "hardhat/config"
-import * as process from "process"
-import type { NetworkUserConfig } from "hardhat/types/config"
+import type { HardhatUserConfig } from "hardhat/config";
+import * as process from "process";
+import type { NetworkUserConfig } from "hardhat/types/config";
 
 // import dotenvx from "@dotenvx/dotenvx"
 // dotenvx.config()
 // import dotenv from "dotenv"
 // dotenv.config({ path: "./.env" })
 
-import { ACCOUNT_ADDRESSES, PRIVATE_KEYS } from "./utils/accounts"
+import { ACCOUNT_ADDRESSES, PRIVATE_KEYS } from "./utils/accounts";
 // Import tasks
-import "./tasks"
+import "./tasks";
 
-let NETWORK = process.env.NETWORK || "hardhat"
-const INFURA_KEY = process.env.INFURA_KEY || ""
-const ALCHEMY_KEY = process.env.ALCHEMY_KEY || ""
+let NETWORK = process.env.NETWORK || "hardhat";
+const INFURA_KEY = process.env.INFURA_KEY || "";
+const ALCHEMY_KEY = process.env.ALCHEMY_KEY || "";
 
 type _Network = NetworkUserConfig & {
-  ws?: string
-  faucet?: string | Array<string>
-  explorer?: string
-  confirmations?: number
-  evmVersion?: string
+  ws?: string;
+  faucet?: string | Array<string>;
+  explorer?: string;
+  confirmations?: number;
+  evmVersion?: string;
   tokens?: {
     [tokenName: string]: {
-      address: `0x${string}`
-      faucet?: Array<string>
-    }
-  }
-}
+      address: `0x${string}`;
+      faucet?: Array<string>;
+    };
+  };
+};
 
-const genesisAcc = 
-  PRIVATE_KEYS.map((privateKey) => {
-    return {
-      privateKey: privateKey,
-      balance: `${1000000000000000000000000n}`,
-    }
-  })
-
+const genesisAcc = PRIVATE_KEYS.map((privateKey) => {
+  return {
+    privateKey: privateKey,
+    balance: `${1000000000000000000000000n}`,
+  };
+});
 
 interface _Config extends HardhatUserConfig {
   networks: {
-    [network: string]: _Network
-  }
+    [network: string]: _Network;
+  };
 }
 
 const config: _Config = {
@@ -138,6 +136,7 @@ const config: _Config = {
       accounts: PRIVATE_KEYS,
       saveDeployments: true,
       explorer: "https://shannon-explorer.somnia.network",
+      faucet: "https://testnet.somnia.network",
       confirmations: 1,
     },
 
@@ -238,8 +237,8 @@ const config: _Config = {
     requiredConfirmations: 1,
     disableFeeBumping: false,
   },
-}
+};
 
-export default config
+export default config;
 
 // https://hardhat.org/plugins
