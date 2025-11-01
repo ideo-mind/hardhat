@@ -175,11 +175,24 @@ const config: _Config = {
   },
 
   verify: {
+      chainDescriptors: {
+    50312: {
+      name: "somnia",
+      blockExplorers: {
+        etherscan: {
+          name: "Somnia Explorer",
+          url: "https://somnia.w3us.site" ,
+          apiUrl: "https://somnia.w3us.site/api",
+        },
+      },
+    },
+  },
     blockscout: {
       enabled: true,
+      
     },
     etherscan: {
-      apiKey: process.env.ETHERSCAN_API_KEY || "",
+      apiKey: "empty",
       customChains: [
         {
           network: "cc",
@@ -193,8 +206,8 @@ const config: _Config = {
           network: "somnia",
           chainId: 50312,
           urls: {
-            apiURL: "https://shannon-explorer.somnia.network/api",
-            browserURL: "https://shannon-explorer.somnia.network",
+            apiURL: "https://somnia.w3us.site/api",
+            browserURL: "https://somnia.w3us.site",
           },
         },
       ],
