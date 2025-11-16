@@ -209,6 +209,16 @@ const config: _Config = {
         },
       },
     },
+    420420422: {
+      name: "polkadot",
+      blockExplorers: {
+        etherscan: {
+          name: "Polkadot Explorer",
+          url: "https://blockscout-passet-hub.parity-testnet.parity.io",
+          apiUrl: "https://blockscout-passet-hub.parity-testnet.parity.io/api",
+        },
+      },
+    },
   },
     blockscout: {
       enabled: true,
@@ -231,6 +241,13 @@ const config: _Config = {
           urls: {
             apiURL: "https://somnia.w3us.site/api",
             browserURL: "https://somnia.w3us.site",
+          },
+        },    {
+          network: "polkadot",
+          chainId: 420420422,
+          urls: {
+            apiURL: "https://blockscout-passet-hub.parity-testnet.parity.io/api",
+            browserURL: "https://blockscout-passet-hub.parity-testnet.parity.io",
           },
         },
       ],
