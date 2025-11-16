@@ -164,6 +164,19 @@ const config: _Config = {
         },
       },
     },
+
+    // Polkadot EVM (Polkadot Hub / Paseo Testnet)
+    polkadotEvm: {
+      type: "http",
+      url: "https://testnet-passet-hub-eth-rpc.polkadot.io",
+      ws: "wss://testnet-passet-hub-eth-rpc.polkadot.io"
+      chainId: 420420422,
+      accounts: PRIVATE_KEYS,
+      saveDeployments: true,
+      explorer: "https://blockscout-passet-hub.parity-testnet.parity.io/",
+      faucet: "https://faucet.polkadot.io/?parachain=1111",
+      confirmations: 1,
+    },
   },
 
   // Paths configuration
