@@ -1,5 +1,6 @@
 import "@nomicfoundation/hardhat-ignition";
 import "@nomicfoundation/hardhat-toolbox-viem";
+// import "@parity/hardhat-polkadot";
 
 import hardhatToolboxMochaEthersPlugin from "@nomicfoundation/hardhat-toolbox-mocha-ethers";
 import keystorePlugin from "@nomicfoundation/hardhat-keystore";
@@ -73,6 +74,11 @@ const config: _Config = {
       evmVersion: "london",
       viaIR: true,
     },
+  },
+
+  resolc: {
+    version: "0.3.0",
+    compilerSource: "npm",
   },
   defaultNetwork: NETWORK,
   namedAccounts: ACCOUNT_ADDRESSES,
@@ -167,6 +173,8 @@ const config: _Config = {
 
     // Polkadot EVM (Polkadot Hub / Paseo Testnet)
     polkadot: {
+      polkavm: true,
+
       type: "http",
       url: "https://testnet-passet-hub-eth-rpc.polkadot.io",
       ws: "wss://testnet-passet-hub-eth-rpc.polkadot.io",
