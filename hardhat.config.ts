@@ -176,6 +176,8 @@ const config: _Config = {
       explorer: "https://blockscout-passet-hub.parity-testnet.parity.io/",
       faucet: "https://faucet.polkadot.io/?parachain=1111",
       confirmations: 1,
+
+      // https://docs.polkadot.com/develop/smart-contracts/json-rpc-apis/
     },
   },
 
