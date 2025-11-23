@@ -146,6 +146,28 @@ const config: _Config = {
       confirmations: 1,
     },
 
+    citrea: {
+      type: "http",
+      url: "https://rpc.testnet.citrea.xyz",
+      ws: "",
+      chainId: 5115,
+      accounts: PRIVATE_KEYS,
+      saveDeployments: true,
+      explorer: "https://explorer.testnet.citrea.xyz/",
+      faucet: ["https://citrea.xyz/faucet"],
+      confirmations: 1,
+      custom: {
+        tokens: {
+          pyUSD: {
+            //cBTC
+            // stubbed: from unreal token
+            address: "0x8d0c9d1c17aE5e40ffF9bE350f57840E9E66Cd93",
+            faucet: [],
+          },
+        },
+      },
+    },
+
     // CreditCoin testnet
     cc: {
       type: "http",
@@ -198,31 +220,31 @@ const config: _Config = {
   },
 
   verify: {
-      chainDescriptors: {
-    50312: {
-      name: "somnia",
-      blockExplorers: {
-        etherscan: {
-          name: "Somnia Explorer",
-          url: "https://somnia.w3us.site" ,
-          apiUrl: "https://somnia.w3us.site/api",
+    chainDescriptors: {
+      50312: {
+        name: "somnia",
+        blockExplorers: {
+          etherscan: {
+            name: "Somnia Explorer",
+            url: "https://somnia.w3us.site",
+            apiUrl: "https://somnia.w3us.site/api",
+          },
+        },
+      },
+      420420422: {
+        name: "polkadot",
+        blockExplorers: {
+          etherscan: {
+            name: "Polkadot Explorer",
+            url: "https://blockscout-passet-hub.parity-testnet.parity.io",
+            apiUrl:
+              "https://blockscout-passet-hub.parity-testnet.parity.io/api",
+          },
         },
       },
     },
-    420420422: {
-      name: "polkadot",
-      blockExplorers: {
-        etherscan: {
-          name: "Polkadot Explorer",
-          url: "https://blockscout-passet-hub.parity-testnet.parity.io",
-          apiUrl: "https://blockscout-passet-hub.parity-testnet.parity.io/api",
-        },
-      },
-    },
-  },
     blockscout: {
       enabled: true,
-      
     },
     etherscan: {
       apiKey: "empty",
@@ -242,12 +264,15 @@ const config: _Config = {
             apiURL: "https://somnia.w3us.site/api",
             browserURL: "https://somnia.w3us.site",
           },
-        },    {
+        },
+        {
           network: "polkadot",
           chainId: 420420422,
           urls: {
-            apiURL: "https://blockscout-passet-hub.parity-testnet.parity.io/api",
-            browserURL: "https://blockscout-passet-hub.parity-testnet.parity.io",
+            apiURL:
+              "https://blockscout-passet-hub.parity-testnet.parity.io/api",
+            browserURL:
+              "https://blockscout-passet-hub.parity-testnet.parity.io",
           },
         },
       ],
