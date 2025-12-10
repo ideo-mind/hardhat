@@ -1,5 +1,6 @@
 import "@nomicfoundation/hardhat-ignition";
 import "@nomicfoundation/hardhat-toolbox-viem";
+// import "@parity/hardhat-polkadot";
 
 import hardhatToolboxMochaEthersPlugin from "@nomicfoundation/hardhat-toolbox-mocha-ethers";
 import keystorePlugin from "@nomicfoundation/hardhat-keystore";
@@ -74,6 +75,11 @@ const config: _Config = {
       viaIR: true,
     },
   },
+
+  resolc: {
+    version: "0.3.0",
+    compilerSource: "npm",
+  },
   defaultNetwork: NETWORK,
   namedAccounts: ACCOUNT_ADDRESSES,
 
@@ -140,6 +146,28 @@ const config: _Config = {
       confirmations: 1,
     },
 
+    citrea: {
+      type: "http",
+      url: "https://rpc.testnet.citrea.xyz",
+      ws: "",
+      chainId: 5115,
+      accounts: PRIVATE_KEYS,
+      saveDeployments: true,
+      explorer: "https://explorer.testnet.citrea.xyz/",
+      faucet: ["https://citrea.xyz/faucet"],
+      confirmations: 1,
+      custom: {
+        tokens: {
+          pyUSD: {
+            //cBTC
+            // stubbed: from unreal token
+            address: "0x8d0c9d1c17aE5e40ffF9bE350f57840E9E66Cd93",
+            faucet: [],
+          },
+        },
+      },
+    },
+
     // CreditCoin testnet
     cc: {
       type: "http",
@@ -164,6 +192,23 @@ const config: _Config = {
         },
       },
     },
+
+    // Polkadot EVM (Polkadot Hub / Paseo Testnet)
+    polkadot: {
+      polkavm: true,
+
+      type: "http",
+      url: "https://testnet-passet-hub-eth-rpc.polkadot.io",
+      ws: "wss://testnet-passet-hub-eth-rpc.polkadot.io",
+      chainId: 420420422,
+      accounts: PRIVATE_KEYS,
+      saveDeployments: true,
+      explorer: "https://blockscout-passet-hub.parity-testnet.parity.io/",
+      faucet: "https://faucet.polkadot.io/?parachain=1111",
+      confirmations: 1,
+
+      // https://docs.polkadot.com/develop/smart-contracts/json-rpc-apis/
+    },
   },
 
   // Paths configuration
@@ -175,21 +220,31 @@ const config: _Config = {
   },
 
   verify: {
-      chainDescriptors: {
-    50312: {
-      name: "somnia",
-      blockExplorers: {
-        etherscan: {
-          name: "Somnia Explorer",
-          url: "https://somnia.w3us.site" ,
-          apiUrl: "https://somnia.w3us.site/api",
+    chainDescriptors: {
+      50312: {
+        name: "somnia",
+        blockExplorers: {
+          etherscan: {
+            name: "Somnia Explorer",
+            url: "https://somnia.w3us.site",
+            apiUrl: "https://somnia.w3us.site/api",
+          },
+        },
+      },
+      420420422: {
+        name: "polkadot",
+        blockExplorers: {
+          etherscan: {
+            name: "Polkadot Explorer",
+            url: "https://blockscout-passet-hub.parity-testnet.parity.io",
+            apiUrl:
+              "https://blockscout-passet-hub.parity-testnet.parity.io/api",
+          },
         },
       },
     },
-  },
     blockscout: {
       enabled: true,
-      
     },
     etherscan: {
       apiKey: "empty",
@@ -208,6 +263,16 @@ const config: _Config = {
           urls: {
             apiURL: "https://somnia.w3us.site/api",
             browserURL: "https://somnia.w3us.site",
+          },
+        },
+        {
+          network: "polkadot",
+          chainId: 420420422,
+          urls: {
+            apiURL:
+              "https://blockscout-passet-hub.parity-testnet.parity.io/api",
+            browserURL:
+              "https://blockscout-passet-hub.parity-testnet.parity.io",
           },
         },
       ],
