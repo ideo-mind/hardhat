@@ -209,6 +209,18 @@ const config: _Config = {
 
       // https://docs.polkadot.com/develop/smart-contracts/json-rpc-apis/
     },
+    tempo: {
+      url: "https://rpc.testnet.tempo.xyz",
+      ws: "wss://rpc.testnet.tempo.xyz",
+      chainId: 42429,
+      accounts: PRIVATE_KEYS,
+      saveDeployments: true,
+      explorer: "https://explore.tempo.xyz/",
+      faucet: "https://docs.tempo.xyz/quickstart/faucet",
+      confirmations: 1,
+
+      //https://docs.tempo.xyz
+    },
   },
 
   // Paths configuration
