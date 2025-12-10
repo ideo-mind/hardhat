@@ -210,6 +210,8 @@ const config: _Config = {
       // https://docs.polkadot.com/develop/smart-contracts/json-rpc-apis/
     },
     tempo: {
+      type: "http",
+
       url: "https://rpc.testnet.tempo.xyz",
       ws: "wss://rpc.testnet.tempo.xyz",
       chainId: 42429,
